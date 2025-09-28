@@ -1,0 +1,9 @@
+body { font-family: Arial, sans-serif; margin: 10px; }
+header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+nav button { margin-right: 5px; }
+.section { margin-top: 10px; }
+ul { list-style-type: none; padding: 0; }
+ul li { margin-bottom: 5px; }
+ul li button { margin-left: 5px; }
+input, select, button { margin: 3px; padding: 5px; }
+h1,h2,h3 { color: #0d6efd; }
