@@ -27,6 +27,7 @@ request.onsuccess = (e) => {
     db = e.target.result;
     loadAccounts();
     loadTransactionTypes();
+    populateTransactionAccounts();
     populateChartAccounts();
 };
 
@@ -53,6 +54,8 @@ const saveTypeBtn = document.getElementById("saveTypeBtn");
 const addTypeBtn = document.getElementById("addTypeBtn");
 const fromDateInput = document.getElementById("fromDate");
 const toDateInput = document.getElementById("toDate");
+const accountFilterSelect = document.getElementById("accountFilterSelect");
+const chartAccountSelect = document.getElementById("chartAccountSelect");
 
 // --- Secciones ---
 function showSection(id) {
@@ -136,7 +139,7 @@ function loadAccounts() {
             chartBtn.title = "Gráfico";
             chartBtn.onclick = () => {
                 selectedAccountId = acc.id;
-                document.getElementById("chartAccountSelect").value = acc.id;
+                chartAccountSelect.value = acc.id;
                 showSection('charts');
                 loadChart();
             };
@@ -147,6 +150,7 @@ function loadAccounts() {
         });
 
         transactionsMenuBtn.disabled = !e.target.result.length;
+        populateTransactionAccounts();
         populateChartAccounts();
     };
 }
@@ -213,13 +217,15 @@ saveTransactionBtn.addEventListener("click", () => {
 });
 
 function loadTransactions() {
-    if (!selectedAccountId) return;
+    const selectedFilterAccount = accountFilterSelect.value;
+    const accountId = selectedFilterAccount || selectedAccountId;
+    if (!accountId) return;
 
     const fromDate = fromDateInput.value;
     const toDate = toDateInput.value;
 
     const tx = db.transaction("transactions", "readonly").objectStore("transactions").index("accountId");
-    tx.getAll(selectedAccountId).onsuccess = (e) => {
+    tx.getAll(Number(accountId)).onsuccess = (e) => {
         let data = e.target.result;
 
         if (fromDate) data = data.filter(t => t.date.split("T")[0] >= fromDate);
@@ -273,6 +279,7 @@ function loadTransactions() {
 
 fromDateInput.addEventListener("change", loadTransactions);
 toDateInput.addEventListener("change", loadTransactions);
+accountFilterSelect.addEventListener("change", loadTransactions);
 
 function editTransaction(id) {
     const tx = db.transaction("transactions", "readwrite").objectStore("transactions");
@@ -392,17 +399,34 @@ function loadTransactionTypes() {
     };
 }
 
-// --- Gráficos ---
-function populateChartAccounts() {
-    const select = document.getElementById("chartAccountSelect");
+// --- Filtrar por cuenta ---
+function populateTransactionAccounts() {
     const tx = db.transaction("accounts", "readonly").objectStore("accounts");
     tx.getAll().onsuccess = (e) => {
-        select.innerHTML = "<option value=''>-- Seleccione Cuenta --</option>";
+        accountFilterSelect.innerHTML = "<option value=''>-- Todas las Cuentas --</option>";
         e.target.result.forEach(acc => {
             const opt = document.createElement("option");
             opt.value = acc.id;
             opt.textContent = acc.name;
-            select.appendChild(opt);
+            accountFilterSelect.appendChild(opt);
         });
     };
+}
+
+// --- Gráficos ---
+function populateChartAccounts() {
+    const tx = db.transaction("accounts", "readonly").objectStore("accounts");
+    tx.getAll().onsuccess = (e) => {
+        chartAccountSelect.innerHTML = "<option value=''>-- Seleccione Cuenta --</option>";
+        e.target.result.forEach(acc => {
+            const opt = document.createElement("option");
+            opt.value = acc.id;
+            opt.textContent = acc.name;
+            chartAccountSelect.appendChild(opt);
+        });
+    };
+}
+
+function loadChart() {
+    // Aquí puedes implementar chart.js u otra librería usando chartAccountSelect.value
 }
