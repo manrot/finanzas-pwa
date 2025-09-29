@@ -229,17 +229,10 @@ saveTransactionBtn.addEventListener("click", () => {
         };
     };
 });
-
 function loadTransactions() {
     const selectedFilterAccount = accountFilterSelect.value;
     const accountId = selectedFilterAccount || selectedAccountId;
     if (!accountId) return;
-
-    // Reset fechas al cambiar de cuenta
-    if (selectedFilterAccount && selectedFilterAccount !== selectedAccountId) {
-        fromDateInput.value = "";
-        toDateInput.value = "";
-    }
 
     const fromDate = fromDateInput.value;
     const toDate = toDateInput.value;
@@ -247,7 +240,6 @@ function loadTransactions() {
     const tx = db.transaction("transactions", "readonly").objectStore("transactions").index("accountId");
     tx.getAll(Number(accountId)).onsuccess = (e) => {
         let data = e.target.result;
-
         if (fromDate) data = data.filter(t => t.date.split("T")[0] >= fromDate);
         if (toDate) data = data.filter(t => t.date.split("T")[0] <= toDate);
 
@@ -259,36 +251,26 @@ function loadTransactions() {
         data.forEach(t => {
             const li = document.createElement("li");
 
+            balance += t.sign === "+" ? t.amount : -t.amount;
+
             const infoDiv = document.createElement("div");
             infoDiv.className = "transaction-info";
 
-            balance += t.sign === "+" ? t.amount : -t.amount;
-
             const nameSpan = document.createElement("span");
             nameSpan.className = "name";
-            nameSpan.textContent = `Monto: ${t.amount} | Saldo Parcial: ${balance}`;
+            nameSpan.textContent = t.description || t.type;
 
-            const descSpan = document.createElement("span");
-            descSpan.className = "description";
-            descSpan.textContent = `${t.description || ""} | Fecha: ${t.date.split("T")[0]}`;
+            const dateSpan = document.createElement("span");
+            dateSpan.className = "description";
+            dateSpan.textContent = new Date(t.date).toLocaleDateString();
 
-            infoDiv.append(nameSpan, descSpan);
+            infoDiv.append(nameSpan, dateSpan);
 
-            const actionsDiv = document.createElement("div");
-            actionsDiv.className = "transaction-actions";
+            const balanceSpan = document.createElement("span");
+            balanceSpan.className = "balance " + (t.sign === "+" ? "income" : "expense");
+            balanceSpan.textContent = (t.sign === "+" ? "+ " : "- ") + t.amount;
 
-            const editBtn = document.createElement("button");
-            editBtn.textContent = "✏️";
-            editBtn.title = "Editar";
-            editBtn.onclick = () => editTransaction(t.id);
-
-            const delBtn = document.createElement("button");
-            delBtn.textContent = "🗑️";
-            delBtn.title = "Borrar";
-            delBtn.onclick = () => deleteTransaction(t.id);
-
-            actionsDiv.append(editBtn, delBtn);
-            li.append(infoDiv, actionsDiv);
+            li.append(infoDiv, balanceSpan);
             transactionList.appendChild(li);
         });
 
@@ -296,6 +278,7 @@ function loadTransactions() {
         updateAccountBalance(balance);
     };
 }
+
 
 fromDateInput.addEventListener("change", loadTransactions);
 toDateInput.addEventListener("change", loadTransactions);

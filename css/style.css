@@ -59,3 +59,45 @@ canvas { width:100% !important; height:auto !important; }
   .btn-add { width:100%; text-align:center; }
   .modal-content { max-width:90%; }
 }
+/* --- Lista de Transacciones Mejorada --- */
+#transactionList li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  padding: 12px 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+  margin-bottom: 0.5rem;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+#transactionList li:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+}
+
+.transaction-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.transaction-info .name {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #333;
+}
+
+.transaction-info .description {
+  font-size: 0.85rem;
+  color: #555;
+  margin-top: 2px;
+}
+
+.transaction-info .balance {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.transaction-info .balance.income { color: #2ecc71; } /* Verde para ingresos */
+.transaction-info .balance.expense { color: #e74c3c; } /* Rojo para gastos */
