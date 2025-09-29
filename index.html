@@ -1,119 +1,119 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Finanzas App</title>
-  <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="css/style.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finanzas App</title>
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <header>
-    <h1>Finanzas App</h1>
-    <nav>
-      <button onclick="showSection('accounts')">Cuentas</button>
-      <button onclick="showSection('transactions')" id="transactionsMenuBtn" disabled>Transacciones</button>
-      <button onclick="showSection('types')">Tipos</button>
-      <button onclick="showSection('importExport')">Import/Export</button>
-      <button onclick="showSection('charts')">Gráficos</button>
-    </nav>
-  </header>
+<header>
+  <h1>Finanzas App</h1>
+  <nav>
+    <button onclick="showSection('accounts')">Cuentas</button>
+    <button onclick="showSection('transactions')" id="transactionsMenuBtn" disabled>Transacciones</button>
+    <button onclick="showSection('types')">Tipos</button>
+    <button onclick="showSection('importExport')">Import/Export</button>
+    <button onclick="showSection('charts')">Gráficos</button>
+  </nav>
+</header>
 
-  <!-- Cuentas -->
-  <section id="accountsSection" class="section">
-    <h2>Lista de Cuentas</h2>
-    <button id="addAccountBtn" class="green-btn">+ Nueva Cuenta</button>
-    <ul id="accountList"></ul>
-  </section>
+<!-- Cuentas -->
+<section id="accountsSection" class="section">
+  <h2>Lista de Cuentas</h2>
+  <button id="addAccountBtn" class="btn-add">+ Nueva Cuenta</button>
+  <ul id="accountList"></ul>
+</section>
 
-  <!-- Transacciones -->
-  <section id="transactionsSection" class="section" style="display:none;">
-    <h2>Transacciones</h2>
-    <div>
-      <label>Desde: <input type="date" id="fromDate"></label>
-      <label>Hasta: <input type="date" id="toDate"></label>
-      <button onclick="loadTransactions()">Filtrar</button>
-    </div>
-    <button id="addTransactionBtn">+ Nueva Transacción</button>
-    <ul id="transactionList"></ul>
-    <h3>Saldo: <span id="balance">0</span></h3>
-  </section>
-
-  <!-- Tipos de Movimiento -->
-  <section id="typesSection" class="section" style="display:none;">
-    <h2>Tipos de Movimiento</h2>
-    <button id="addTypeBtn">+ Nuevo Tipo</button>
-    <ul id="typeList"></ul>
-  </section>
-
-  <!-- Import/Export -->
-  <section id="importExportSection" class="section" style="display:none;">
-    <h2>Importar / Exportar Datos</h2>
-    <div>
-      <button id="exportBtn">Exportar Datos</button>
-    </div>
-    <div>
-      <input type="file" id="importFile">
-      <button id="importBtn">Importar Datos</button>
-    </div>
-  </section>
-
-  <!-- Gráficos -->
-  <section id="chartsSection" class="section" style="display:none;">
-    <h2>Gráficos por Tipo de Transacción</h2>
-    <div>
-      <label>Cuenta: <select id="chartAccountSelect"></select></label>
-      <label>Desde: <input type="date" id="chartFrom"></label>
-      <label>Hasta: <input type="date" id="chartTo"></label>
-      <button onclick="loadChart()">Actualizar</button>
-    </div>
-    <canvas id="chartCanvas"></canvas>
-  </section>
-
-  <!-- Modales -->
-  <div id="modalAccount" class="modal">
-    <div class="modal-content">
-      <h3>Cuenta</h3>
-      <input type="text" id="accountNameInput" placeholder="Nombre">
-      <input type="text" id="accountDescInput" placeholder="Descripción">
-      <button id="saveAccountBtn">Guardar</button>
-      <button class="modal-cancel" onclick="closeModal('modalAccount')">Cancelar</button>
-    </div>
+<!-- Transacciones -->
+<section id="transactionsSection" class="section" style="display:none;">
+  <h2>Transacciones</h2>
+  <div class="filters">
+    <label>Desde: <input type="date" id="fromDate"></label>
+    <label>Hasta: <input type="date" id="toDate"></label>
   </div>
+  <button id="addTransactionBtn" class="btn-add">+ Nueva Transacción</button>
+  <ul id="transactionList"></ul>
+  <h3>Saldo: <span id="balance">0</span></h3>
+</section>
 
-  <div id="modalTransaction" class="modal">
-    <div class="modal-content">
-      <h3>Transacción</h3>
-      <input type="number" id="transactionAmountInput" placeholder="Monto">
-      <select id="transactionTypeSelect"></select>
-      <input type="text" id="transactionDescInput" placeholder="Descripción">
-      <button id="saveTransactionBtn">Guardar</button>
-      <button class="modal-cancel" onclick="closeModal('modalTransaction')">Cancelar</button>
-    </div>
+<!-- Tipos de Movimiento -->
+<section id="typesSection" class="section" style="display:none;">
+  <h2>Tipos de Movimiento</h2>
+  <button id="addTypeBtn" class="btn-add">+ Nuevo Tipo</button>
+  <ul id="typeList"></ul>
+</section>
+
+<!-- Import/Export -->
+<section id="importExportSection" class="section" style="display:none;">
+  <h2>Importar / Exportar Datos</h2>
+  <div>
+    <button id="exportBtn">Exportar Datos</button>
   </div>
-
-  <div id="modalType" class="modal">
-    <div class="modal-content">
-      <h3>Tipo de Movimiento</h3>
-      <input type="text" id="typeNameInput" placeholder="Nombre">
-      <select id="typeSignInput">
-        <option value="+">Positivo</option>
-        <option value="-">Negativo</option>
-      </select>
-      <button id="saveTypeBtn">Guardar</button>
-      <button class="modal-cancel" onclick="closeModal('modalType')">Cancelar</button>
-    </div>
+  <div>
+    <input type="file" id="importFile">
+    <button id="importBtn">Importar Datos</button>
   </div>
+</section>
 
-  <script src="js/app.js"></script>
-  <script src="js/charts.js"></script>
-  <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("service-worker.js")
-      .then(() => console.log("Service Worker registrado"))
-      .catch((err) => console.log("Error:", err));
-    }
-  </script>
+<!-- Gráficos -->
+<section id="chartsSection" class="section" style="display:none;">
+  <h2>Gráficos por Tipo de Transacción</h2>
+  <div class="filters">
+    <label>Cuenta: 
+      <select id="chartAccountSelect" onchange="loadChart()"></select>
+    </label>
+    <label>Desde: <input type="date" id="chartFrom" onchange="loadChart()"></label>
+    <label>Hasta: <input type="date" id="chartTo" onchange="loadChart()"></label>
+  </div>
+  <canvas id="chartCanvas"></canvas>
+</section>
+
+<!-- Modales -->
+<div id="modalAccount" class="modal">
+  <div class="modal-content">
+    <h3>Cuenta</h3>
+    <input type="text" id="accountNameInput" placeholder="Nombre">
+    <input type="text" id="accountDescInput" placeholder="Descripción">
+    <button id="saveAccountBtn">Guardar</button>
+    <button class="modal-cancel" onclick="closeModal('modalAccount')">Cancelar</button>
+  </div>
+</div>
+
+<div id="modalTransaction" class="modal">
+  <div class="modal-content">
+    <h3>Transacción</h3>
+    <input type="number" id="transactionAmountInput" placeholder="Monto">
+    <select id="transactionTypeSelect"></select>
+    <input type="text" id="transactionDescInput" placeholder="Descripción">
+    <button id="saveTransactionBtn">Guardar</button>
+    <button class="modal-cancel" onclick="closeModal('modalTransaction')">Cancelar</button>
+  </div>
+</div>
+
+<div id="modalType" class="modal">
+  <div class="modal-content">
+    <h3>Tipo de Movimiento</h3>
+    <input type="text" id="typeNameInput" placeholder="Nombre">
+    <select id="typeSignInput">
+      <option value="+">Positivo</option>
+      <option value="-">Negativo</option>
+    </select>
+    <button id="saveTypeBtn">Guardar</button>
+    <button class="modal-cancel" onclick="closeModal('modalType')">Cancelar</button>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script src="js/charts.js"></script>
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js")
+  .then(()=>console.log("Service Worker registrado"))
+  .catch(err=>console.log("Error:",err));
+}
+</script>
 </body>
 </html>
