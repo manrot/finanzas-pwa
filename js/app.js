@@ -249,30 +249,32 @@ function loadTransactions() {
         data.sort((a,b)=> new Date(a.date) - new Date(b.date));
 
         data.forEach(t => {
-            const li = document.createElement("li");
+    const li = document.createElement("li");
+    li.className = "transaction-item";
 
-            balance += t.sign === "+" ? t.amount : -t.amount;
+    // Info izquierda
+    const infoDiv = document.createElement("div");
+    infoDiv.className = "transaction-info";
 
-            const infoDiv = document.createElement("div");
-            infoDiv.className = "transaction-info";
+    const nameSpan = document.createElement("span");
+    nameSpan.className = "name";
+    nameSpan.textContent = t.description || t.type;
 
-            const nameSpan = document.createElement("span");
-            nameSpan.className = "name";
-            nameSpan.textContent = t.description || t.type;
+    const dateSpan = document.createElement("span");
+    dateSpan.className = "description";
+    dateSpan.textContent = new Date(t.date).toLocaleDateString();
 
-            const dateSpan = document.createElement("span");
-            dateSpan.className = "description";
-            dateSpan.textContent = new Date(t.date).toLocaleDateString();
+    infoDiv.append(nameSpan, dateSpan);
 
-            infoDiv.append(nameSpan, dateSpan);
+    // Monto derecha
+    const amountSpan = document.createElement("span");
+    amountSpan.className = "balance " + (t.sign === "+" ? "income" : "expense");
+    amountSpan.textContent = (t.sign === "+" ? "+ " : "- ") + t.amount;
 
-            const balanceSpan = document.createElement("span");
-            balanceSpan.className = "balance " + (t.sign === "+" ? "income" : "expense");
-            balanceSpan.textContent = (t.sign === "+" ? "+ " : "- ") + t.amount;
+    li.append(infoDiv, amountSpan);
+    transactionList.appendChild(li);
+});
 
-            li.append(infoDiv, balanceSpan);
-            transactionList.appendChild(li);
-        });
 
         balanceSpan.textContent = balance;
         updateAccountBalance(balance);
