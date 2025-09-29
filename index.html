@@ -33,6 +33,9 @@
   <div class="filters">
     <label>Desde: <input type="date" id="fromDate"></label>
     <label>Hasta: <input type="date" id="toDate"></label>
+    <label>Cuenta:
+      <select id="accountFilterSelect"></select>
+    </label>
   </div>
   <button id="addTransactionBtn" class="btn-add">+ Nueva Transacción</button>
   <ul id="transactionList"></ul>
@@ -49,12 +52,10 @@
 <!-- Import/Export -->
 <section id="importExportSection" class="section" style="display:none;">
   <h2>Importar / Exportar Datos</h2>
-  <div>
-    <button id="exportBtn">Exportar Datos</button>
-  </div>
-  <div>
+  <div class="filters">
+    <button id="exportBtn" class="btn-add">Exportar Datos</button>
     <input type="file" id="importFile">
-    <button id="importBtn">Importar Datos</button>
+    <button id="importBtn" class="btn-add">Importar Datos</button>
   </div>
 </section>
 

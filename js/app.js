@@ -61,7 +61,21 @@ const chartAccountSelect = document.getElementById("chartAccountSelect");
 function showSection(id) {
     document.querySelectorAll(".section").forEach(s => s.style.display = "none");
     document.getElementById(id + "Section").style.display = "block";
+
+    if (id === "accounts") {
+        loadAccounts(); // recarga las cuentas y combos
+    } else if (id === "transactions") {
+        loadTransactions(); // recarga transacciones para la cuenta seleccionada
+    }
 }
+
+// --- Menú responsive ---
+const menuToggle = document.getElementById("menuToggle");
+const mainNav = document.getElementById("mainNav");
+
+menuToggle?.addEventListener("click", () => {
+    mainNav.classList.toggle("show");
+});
 
 // --- Modales ---
 function openModal(id) { document.getElementById(id).style.display = "flex"; }
@@ -220,6 +234,12 @@ function loadTransactions() {
     const selectedFilterAccount = accountFilterSelect.value;
     const accountId = selectedFilterAccount || selectedAccountId;
     if (!accountId) return;
+
+    // Reset fechas al cambiar de cuenta
+    if (selectedFilterAccount && selectedFilterAccount !== selectedAccountId) {
+        fromDateInput.value = "";
+        toDateInput.value = "";
+    }
 
     const fromDate = fromDateInput.value;
     const toDate = toDateInput.value;
