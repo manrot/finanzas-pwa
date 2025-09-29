@@ -249,32 +249,33 @@ function loadTransactions() {
         data.sort((a,b)=> new Date(a.date) - new Date(b.date));
 
         data.forEach(t => {
-    const li = document.createElement("li");
-    li.className = "transaction-item";
+            balance += t.sign === "+" ? t.amount : -t.amount;
 
-    // Info izquierda
-    const infoDiv = document.createElement("div");
-    infoDiv.className = "transaction-info";
+            const li = document.createElement("li");
+            li.className = "transaction-item";
 
-    const nameSpan = document.createElement("span");
-    nameSpan.className = "name";
-    nameSpan.textContent = t.description || t.type;
+            // Info izquierda
+            const infoDiv = document.createElement("div");
+            infoDiv.className = "transaction-info";
 
-    const dateSpan = document.createElement("span");
-    dateSpan.className = "description";
-    dateSpan.textContent = new Date(t.date).toLocaleDateString();
+            const nameSpan = document.createElement("span");
+            nameSpan.className = "name";
+            nameSpan.textContent = t.description || t.type;
 
-    infoDiv.append(nameSpan, dateSpan);
+            const dateSpan = document.createElement("span");
+            dateSpan.className = "description";
+            dateSpan.textContent = new Date(t.date).toLocaleDateString();
 
-    // Monto derecha
-    const amountSpan = document.createElement("span");
-    amountSpan.className = "balance " + (t.sign === "+" ? "income" : "expense");
-    amountSpan.textContent = (t.sign === "+" ? "+ " : "- ") + t.amount;
+            infoDiv.append(nameSpan, dateSpan);
 
-    li.append(infoDiv, amountSpan);
-    transactionList.appendChild(li);
-});
+            // Monto derecha
+            const amountSpan = document.createElement("span");
+            amountSpan.className = "balance " + (t.sign === "+" ? "income" : "expense");
+            amountSpan.textContent = (t.sign === "+" ? "+ " : "- ") + t.amount;
 
+            li.append(infoDiv, amountSpan);
+            transactionList.appendChild(li);
+        });
 
         balanceSpan.textContent = balance;
         updateAccountBalance(balance);
