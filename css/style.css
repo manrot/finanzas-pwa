@@ -147,3 +147,19 @@ canvas { width:100% !important; height:auto !important; }
   .btn-add { width:100%; text-align:center; }
   .modal-content { max-width:90%; }
 }
+.transaction-item {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.transaction-item .transaction-info {
+  flex: 1;
+  margin-right: 8px;
+}
+
+.transaction-item .balance {
+  flex-shrink: 0;
+}
