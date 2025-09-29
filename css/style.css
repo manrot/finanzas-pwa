@@ -43,22 +43,6 @@ ul li { display:flex; justify-content:space-between; align-items:center; padding
 
 /* Gráficos */
 canvas { width:100% !important; height:auto !important; }
-
-/* Responsive */
-@media(max-width:768px){
-  #menuToggle { display:block; }
-  .nav-links { display:none; flex-direction:column; gap:0.25rem; width:100%; }
-  .nav-links.show { display:flex; }
-  .nav-links button { width:100%; text-align:left; }
-  ul li { flex-direction:column; align-items:flex-start; }
-  .account-actions, .transaction-actions, .type-actions { margin-top:0.5rem; }
-  .filters { flex-direction:column; }
-}
-
-@media(max-width:480px){
-  .btn-add { width:100%; text-align:center; }
-  .modal-content { max-width:90%; }
-}
 /* --- Lista de Transacciones Mejorada --- */
 #transactionList li {
   display: flex;
@@ -131,3 +115,35 @@ canvas { width:100% !important; height:auto !important; }
 
 .balance.income { color: #2ecc71; font-weight: 700; }
 .balance.expense { color: #e74c3c; font-weight: 700; }
+
+
+/* Responsive */
+@media(max-width:768px){
+  #menuToggle { display:block; }
+  .nav-links { display:none; flex-direction:column; gap:0.25rem; width:100%; }
+  .nav-links.show { display:flex; }
+  .nav-links button { width:100%; text-align:left; }
+  ul li { flex-direction:column; align-items:flex-start; }
+  .account-actions, .transaction-actions, .type-actions { margin-top:0.5rem; }
+  .filters { flex-direction:column; }
+
+   .transaction-item {
+    flex-direction: row;          /* Mantener info a la izquierda y monto a la derecha */
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .transaction-info {
+    flex: 1;
+    margin-right: 8px;
+  }
+
+  .balance {
+    flex-shrink: 0;
+  }
+}
+
+@media(max-width:480px){
+  .btn-add { width:100%; text-align:center; }
+  .modal-content { max-width:90%; }
+}
