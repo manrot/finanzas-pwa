@@ -10,8 +10,8 @@
 </head>
 <body>
 <header>
-  <nav>
-    <button id="menuToggle">☰ Menú</button>
+  <nav id="mainNav">
+    <button id="menuToggle">☰</button>
     <div class="nav-links">
       <button onclick="showSection('accounts')">Cuentas</button>
       <button onclick="showSection('transactions')" id="transactionsMenuBtn" disabled>Transacciones</button>
@@ -22,6 +22,7 @@
   </nav>
 </header>
 
+<!-- Secciones (igual que antes) -->
 <section id="accountsSection" class="section">
   <h2>Lista de Cuentas</h2>
   <button id="addAccountBtn" class="btn-add">+ Nueva Cuenta</button>
