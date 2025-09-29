@@ -1,9 +1,50 @@
-body { font-family: Arial, sans-serif; margin: 10px; }
-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-nav button { margin-right: 5px; }
-.section { margin-top: 10px; }
-ul { list-style-type: none; padding: 0; }
-ul li { margin-bottom: 5px; }
-ul li button { margin-left: 5px; }
-input, select, button { margin: 3px; padding: 5px; }
-h1,h2,h3 { color: #0d6efd; }
+body { font-family: Arial, sans-serif; margin: 0; background:#f8f9fa; }
+header { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background:#0d6efd; color:#fff; }
+nav button { margin-right: 5px; padding:5px 10px; border:none; border-radius:5px; cursor:pointer; background:#fff; color:#0d6efd; }
+nav button:hover { background:#dbe5ff; }
+
+.section { margin: 20px; padding: 15px; background:#fff; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.1);}
+h1,h2,h3 { color:#0d6efd; }
+button { cursor:pointer; border:none; border-radius:5px; padding:5px 10px; }
+button:hover { background:#0d6efd; color:#fff; }
+
+ul { list-style:none; padding:0; }
+
+/* Cards responsive */
+ul li {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  background:#fff;
+  padding:15px;
+  border-radius:10px;
+  box-shadow:0 2px 5px rgba(0,0,0,0.1);
+  margin-bottom:10px;
+  transition: transform 0.2s;
+}
+ul li:hover { transform:translateY(-2px); }
+
+.account-info, .transaction-info, .type-info {
+  display:flex; flex-direction:column;
+}
+.account-info span.name, .transaction-info span.name, .type-info span.name {
+  font-weight:bold; color:#1c1c1c; font-size:1.1em;
+}
+.account-info span.description, .transaction-info span.description, .type-info span.description {
+  font-size:0.9em; color:#555;
+}
+.account-actions button, .transaction-actions button, .type-actions button {
+  margin-left:5px; padding:5px 8px; font-size:0.9em;
+}
+
+/* Modales */
+.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; }
+.modal-content { background:#fff; padding:20px; border-radius:10px; width:300px; text-align:center; }
+.modal-cancel { background:#dc3545; color:#fff; margin-top:10px; padding:5px 10px; }
+.modal-cancel:hover { background:#ff6b6b; }
+
+/* Responsive Cards para móviles */
+@media(max-width:600px){
+  ul li { flex-direction:column; align-items:flex-start; }
+  .account-actions, .transaction-actions, .type-actions { margin-top:10px; }
+}

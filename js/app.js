@@ -1,230 +1,270 @@
 let db;
 let selectedAccountId = null;
 
-// Inicializar IndexedDB
-const request = indexedDB.open("FinanzasDB", 1);
-
-request.onupgradeneeded = (event) => {
-  db = event.target.result;
-  if (!db.objectStoreNames.contains("accounts")) db.createObjectStore("accounts", { keyPath: "id", autoIncrement: true });
-  if (!db.objectStoreNames.contains("transactions")) {
-    const store = db.createObjectStore("transactions", { keyPath: "id", autoIncrement: true });
-    store.createIndex("accountId", "accountId", { unique: false });
-    store.createIndex("type", "type", { unique: false });
+// --- Inicializar IndexedDB ---
+const request = indexedDB.open("FinanzasDB",1);
+request.onupgradeneeded = (e)=>{
+  db = e.target.result;
+  if(!db.objectStoreNames.contains("accounts")) db.createObjectStore("accounts",{keyPath:"id",autoIncrement:true});
+  if(!db.objectStoreNames.contains("transactions")){
+    const store = db.createObjectStore("transactions",{keyPath:"id",autoIncrement:true});
+    store.createIndex("accountId","accountId",{unique:false});
   }
-  if (!db.objectStoreNames.contains("transactionTypes")) {
-    const store = db.createObjectStore("transactionTypes", { keyPath: "type" });
-    // Tipos iniciales
-    ["entrada","salida","entrada prestamo","salida prestamo"].forEach(t => store.add({ type: t }));
+  if(!db.objectStoreNames.contains("transactionTypes")){
+    const store = db.createObjectStore("transactionTypes",{keyPath:"type"});
+    ["entrada","salida","entrada prestamo","salida prestamo"].forEach(t=>store.add({type:t, sign: t.startsWith("entrada") ? "+" : "-"}));
   }
 };
 
-request.onsuccess = (event) => {
-  db = event.target.result;
+request.onsuccess = (e)=>{
+  db = e.target.result;
   loadAccounts();
   loadTransactionTypes();
 };
 
-request.onerror = (event) => console.log("Error DB:", event.target.error);
+request.onerror = (e)=>console.log("Error DB:", e.target.error);
 
-// DOM
+// --- DOM ---
 const accountList = document.getElementById("accountList");
-const addAccountBtn = document.getElementById("addAccountBtn");
-const accountSelect = document.getElementById("accountSelect");
-const typeSelect = document.getElementById("typeSelect");
-const amountInput = document.getElementById("amount");
-const descInput = document.getElementById("descInput");
-const addTransactionBtn = document.getElementById("addTransactionBtn");
 const transactionList = document.getElementById("transactionList");
-const balanceSpan = document.getElementById("balance");
+const typeList = document.getElementById("typeList");
 const transactionsMenuBtn = document.getElementById("transactionsMenuBtn");
-const exportBtn = document.getElementById("exportBtn");
-const importBtn = document.getElementById("importBtn");
-const importFile = document.getElementById("importFile");
+const balanceSpan = document.getElementById("balance");
 
-// Función para cambiar sección
-function showSection(id) {
-  document.querySelectorAll(".section").forEach(s => s.style.display = "none");
-  document.getElementById(id + "Section").style.display = "block";
+const accountNameInput = document.getElementById("accountNameInput");
+const accountDescInput = document.getElementById("accountDescInput");
+const saveAccountBtn = document.getElementById("saveAccountBtn");
+const addAccountBtn = document.getElementById("addAccountBtn");
+
+const transactionAmountInput = document.getElementById("transactionAmountInput");
+const transactionDescInput = document.getElementById("transactionDescInput");
+const transactionTypeSelect = document.getElementById("transactionTypeSelect");
+const saveTransactionBtn = document.getElementById("saveTransactionBtn");
+const addTransactionBtn = document.getElementById("addTransactionBtn");
+
+const typeNameInput = document.getElementById("typeNameInput");
+const typeSignInput = document.getElementById("typeSignInput");
+const saveTypeBtn = document.getElementById("saveTypeBtn");
+const addTypeBtn = document.getElementById("addTypeBtn");
+
+// --- Secciones ---
+function showSection(id){
+  document.querySelectorAll(".section").forEach(s=>s.style.display="none");
+  document.getElementById(id+"Section").style.display="block";
 }
 
-// ------------------- CUENTAS -------------------
-function loadAccounts() {
-  const tx = db.transaction("accounts", "readonly").objectStore("accounts");
-  const request = tx.getAll();
-  request.onsuccess = () => {
-    accountList.innerHTML = "";
-    accountSelect.innerHTML = "";
-    request.result.forEach(acc => {
-      const li = document.createElement("li");
-      li.textContent = `${acc.name} - ${acc.description || ""} - Saldo: ${acc.balance || 0}`;
-      const editBtn = document.createElement("button");
-      editBtn.textContent = "Editar";
-      editBtn.onclick = () => editAccount(acc.id);
-      const delBtn = document.createElement("button");
-      delBtn.textContent = "Borrar";
-      delBtn.onclick = () => deleteAccount(acc.id);
-      const viewBtn = document.createElement("button");
-      viewBtn.textContent = "Ver";
-      viewBtn.onclick = () => { selectedAccountId = acc.id; showSection('transactions'); loadTransactions(); };
-      const chartBtn = document.createElement("button");
-      chartBtn.textContent = "Gráfico";
-      chartBtn.onclick = () => { selectedAccountId = acc.id; showSection('charts'); loadChart(); };
-      li.append(editBtn, delBtn, viewBtn, chartBtn);
+// --- Modales ---
+function openModal(id){ document.getElementById(id).style.display="flex"; }
+function closeModal(id){ document.getElementById(id).style.display="none"; }
+
+// --- Cuentas ---
+addAccountBtn.addEventListener("click",()=>{
+  accountNameInput.value=""; accountDescInput.value="";
+  openModal("modalAccount");
+});
+
+saveAccountBtn.addEventListener("click",()=>{
+  const name=accountNameInput.value;
+  const desc=accountDescInput.value;
+  if(!name) return;
+  const tx = db.transaction("accounts","readwrite").objectStore("accounts");
+  tx.add({name, description: desc, balance:0}).onsuccess=()=>{
+    closeModal("modalAccount");
+    loadAccounts();
+  };
+});
+
+function loadAccounts(){
+  const tx = db.transaction("accounts","readonly").objectStore("accounts");
+  tx.getAll().onsuccess=(e)=>{
+    accountList.innerHTML="";
+    e.target.result.forEach(acc=>{
+      const li=document.createElement("li");
+      const infoDiv=document.createElement("div"); infoDiv.className="account-info";
+      const nameSpan=document.createElement("span"); nameSpan.className="name"; nameSpan.textContent=acc.name;
+      const descSpan=document.createElement("span"); descSpan.className="description"; descSpan.textContent=acc.description || "";
+      const saldoSpan=document.createElement("span"); saldoSpan.className="description"; saldoSpan.textContent="Saldo: "+(acc.balance||0);
+      infoDiv.append(nameSpan,descSpan,saldoSpan);
+
+      const actionsDiv=document.createElement("div"); actionsDiv.className="account-actions";
+      const editBtn=document.createElement("button"); editBtn.textContent="✏️"; editBtn.title="Editar"; editBtn.onclick=()=>editAccount(acc.id);
+      const delBtn=document.createElement("button"); delBtn.textContent="🗑️"; delBtn.title="Borrar"; delBtn.onclick=()=>deleteAccount(acc.id);
+      const viewBtn=document.createElement("button"); viewBtn.textContent="👁️"; viewBtn.title="Ver"; viewBtn.onclick=()=>{ selectedAccountId=acc.id; showSection('transactions'); loadTransactions(); };
+      const chartBtn=document.createElement("button"); chartBtn.textContent="📊"; chartBtn.title="Gráfico"; chartBtn.onclick=()=>{ selectedAccountId=acc.id; showSection('charts'); loadChart(); };
+      actionsDiv.append(editBtn,delBtn,viewBtn,chartBtn);
+
+      li.append(infoDiv,actionsDiv);
       accountList.appendChild(li);
-
-      const option = document.createElement("option");
-      option.value = acc.id;
-      option.textContent = acc.name;
-      accountSelect.appendChild(option);
     });
-    transactionsMenuBtn.disabled = !request.result.length;
+    transactionsMenuBtn.disabled=!e.target.result.length;
   };
 }
 
-addAccountBtn.addEventListener("click", () => {
-  const name = prompt("Nombre de la cuenta:");
-  if (!name) return;
-  const description = prompt("Descripción:");
-  const tx = db.transaction("accounts", "readwrite").objectStore("accounts");
-  tx.add({ name, description, balance: 0 });
-  tx.oncomplete = loadAccounts;
-});
-
-function editAccount(id) {
-  const tx = db.transaction("accounts", "readwrite").objectStore("accounts");
-  const req = tx.get(id);
-  req.onsuccess = () => {
-    const acc = req.result;
-    const newName = prompt("Nombre:", acc.name);
-    const newDesc = prompt("Descripción:", acc.description);
-    acc.name = newName || acc.name;
-    acc.description = newDesc || acc.description;
-    tx.put(acc).onsuccess = loadAccounts;
+function editAccount(id){
+  const tx = db.transaction("accounts","readwrite").objectStore("accounts");
+  tx.get(id).onsuccess=(e)=>{
+    const acc=e.target.result;
+    accountNameInput.value=acc.name;
+    accountDescInput.value=acc.description;
+    openModal("modalAccount");
+    saveAccountBtn.onclick=()=>{
+      acc.name=accountNameInput.value||acc.name;
+      acc.description=accountDescInput.value||acc.description;
+      tx.put(acc).onsuccess=()=>{
+        closeModal("modalAccount");
+        loadAccounts();
+      };
+    };
   };
 }
 
-function deleteAccount(id) {
-  if (!confirm("Eliminar esta cuenta?")) return;
-  const tx = db.transaction(["accounts","transactions"], "readwrite");
+function deleteAccount(id){
+  if(!confirm("Eliminar cuenta?")) return;
+  const tx = db.transaction(["accounts","transactions"],"readwrite");
   tx.objectStore("accounts").delete(id);
-  const transStore = tx.objectStore("transactions");
-  transStore.index("accountId").getAll(id).onsuccess = function(e){
-    e.target.result.forEach(t => transStore.delete(t.id));
-  };
-  tx.oncomplete = loadAccounts;
+  const transStore=tx.objectStore("transactions");
+  transStore.index("accountId").getAll(id).onsuccess=function(e){ e.target.result.forEach(t=>transStore.delete(t.id)); };
+  tx.oncomplete=loadAccounts;
 }
 
-// ------------------- TRANSACCIONES -------------------
-function loadTransactionTypes() {
-  const tx = db.transaction("transactionTypes", "readonly").objectStore("transactionTypes");
-  tx.getAll().onsuccess = (e) => {
-    typeSelect.innerHTML = "";
-    e.target.result.forEach(t => {
-      const opt = document.createElement("option");
-      opt.value = t.type;
-      opt.textContent = t.type;
-      typeSelect.appendChild(opt);
-    });
-  };
-}
-
-function loadTransactions() {
-  if (!selectedAccountId) return;
-  const tx = db.transaction("transactions", "readonly").objectStore("transactions").index("accountId").getAll(selectedAccountId);
-  tx.onsuccess = (e) => {
-    transactionList.innerHTML = "";
-    let balance = 0;
-    e.target.result.forEach(t => {
-      const li = document.createElement("li");
-      li.textContent = `${t.date.split("T")[0]} - ${t.type} - ${t.amount} - ${t.description || ""}`;
-      const editBtn = document.createElement("button");
-      editBtn.textContent = "Editar";
-      editBtn.onclick = () => editTransaction(t.id);
-      const delBtn = document.createElement("button");
-      delBtn.textContent = "Borrar";
-      delBtn.onclick = () => deleteTransaction(t.id);
-      li.append(editBtn, delBtn);
-      transactionList.appendChild(li);
-
-      balance += (t.type.startsWith("entrada") ? t.amount : -t.amount);
-    });
-    balanceSpan.textContent = balance;
-    updateAccountBalance(balance);
-  };
-}
-
-addTransactionBtn.addEventListener("click", () => {
-  const amount = parseFloat(amountInput.value);
-  const type = typeSelect.value;
-  const desc = descInput.value;
-  if (!selectedAccountId || !amount) return;
-
-  const tx = db.transaction("transactions", "readwrite").objectStore("transactions");
-  tx.add({ accountId: selectedAccountId, type, amount, date: new Date().toISOString(), description: desc }).onsuccess = () => {
-    amountInput.value = descInput.value = "";
-    loadTransactions();
-  };
+// --- Transacciones ---
+addTransactionBtn.addEventListener("click",()=>{
+  transactionAmountInput.value=""; transactionDescInput.value="";
+  loadTransactionTypes();
+  openModal("modalTransaction");
 });
 
-function editTransaction(id) {
-  const tx = db.transaction("transactions", "readwrite").objectStore("transactions");
-  tx.get(id).onsuccess = (e) => {
-    const t = e.target.result;
-    const newAmount = parseFloat(prompt("Monto:", t.amount)) || t.amount;
-    const newType = prompt("Tipo:", t.type) || t.type;
-    const newDesc = prompt("Descripción:", t.description) || t.description;
-    t.amount = newAmount; t.type = newType; t.description = newDesc;
-    tx.put(t).onsuccess = loadTransactions;
-  };
-}
+saveTransactionBtn.addEventListener("click",()=>{
+  const amount=parseFloat(transactionAmountInput.value);
+  const typeName=transactionTypeSelect.value;
+  const desc=transactionDescInput.value;
+  if(!selectedAccountId || !amount || !typeName) return;
 
-function deleteTransaction(id) {
-  if (!confirm("Eliminar esta transacción?")) return;
-  const tx = db.transaction("transactions", "readwrite").objectStore("transactions");
-  tx.delete(id).onsuccess = loadTransactions;
-}
-
-function updateAccountBalance(balance) {
-  const tx = db.transaction("accounts", "readwrite").objectStore("accounts");
-  tx.get(selectedAccountId).onsuccess = (e) => {
-    const acc = e.target.result;
-    acc.balance = balance;
-    tx.put(acc).onsuccess = loadAccounts;
-  };
-}
-
-// ------------------- EXPORT / IMPORT -------------------
-exportBtn.addEventListener("click", () => {
-  const accTx = db.transaction("accounts", "readonly").objectStore("accounts").getAll();
-  const transTx = db.transaction("transactions", "readonly").objectStore("transactions").getAll();
-
-  accTx.onsuccess = () => {
-    transTx.onsuccess = () => {
-      const dataStr = JSON.stringify({ accounts: accTx.result, transactions: transTx.result });
-      const blob = new Blob([dataStr], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "finanzas.json";
-      a.click();
+  const txStore=db.transaction(["transactions","transactionTypes"],"readonly");
+  txStore.objectStore("transactionTypes").get(typeName).onsuccess=(e)=>{
+    const signo=e.target.result.sign;
+    const tx=db.transaction("transactions","readwrite").objectStore("transactions");
+    tx.add({accountId:selectedAccountId, type:typeName, amount, sign:signo, date:new Date().toISOString(), description:desc}).onsuccess=()=>{
+      closeModal("modalTransaction");
+      loadTransactions();
     };
   };
 });
 
-importBtn.addEventListener("click", () => {
-  if (!importFile.files[0]) return;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const data = JSON.parse(e.target.result);
-    if (!data.accounts || !data.transactions) return;
-    const accTx = db.transaction("accounts", "readwrite").objectStore("accounts");
-    data.accounts.forEach(a => accTx.put(a));
-    accTx.oncomplete = loadAccounts;
+function loadTransactions(){
+  if(!selectedAccountId) return;
+  const tx = db.transaction("transactions","readonly").objectStore("transactions");
+  const index = tx.index("accountId");
+  index.getAll(selectedAccountId).onsuccess=(e)=>{
+    transactionList.innerHTML="";
+    let balance=0;
+    e.target.result.forEach(t=>{
+      const li=document.createElement("li");
+      const infoDiv=document.createElement("div"); infoDiv.className="transaction-info";
+      const nameSpan=document.createElement("span"); nameSpan.className="name"; nameSpan.textContent=t.type+" - "+t.amount;
+      const descSpan=document.createElement("span"); descSpan.className="description"; descSpan.textContent=t.description||""+" | "+t.date.split("T")[0];
+      infoDiv.append(nameSpan,descSpan);
 
-    const transTx = db.transaction("transactions", "readwrite").objectStore("transactions");
-    data.transactions.forEach(t => transTx.put(t));
-    transTx.oncomplete = () => { if(selectedAccountId) loadTransactions(); };
+      const actionsDiv=document.createElement("div"); actionsDiv.className="transaction-actions";
+      const editBtn=document.createElement("button"); editBtn.textContent="✏️"; editBtn.title="Editar"; editBtn.onclick=()=>editTransaction(t.id);
+      const delBtn=document.createElement("button"); delBtn.textContent="🗑️"; delBtn.title="Borrar"; delBtn.onclick=()=>deleteTransaction(t.id);
+      actionsDiv.append(editBtn,delBtn);
+
+      li.append(infoDiv,actionsDiv);
+      transactionList.appendChild(li);
+
+      balance += t.sign==="+" ? t.amount : -t.amount;
+    });
+    balanceSpan.textContent=balance;
+    updateAccountBalance(balance);
   };
-  reader.readAsText(importFile.files[0]);
+}
+
+function editTransaction(id){
+  const tx = db.transaction("transactions","readwrite").objectStore("transactions");
+  tx.get(id).onsuccess=(e)=>{
+    const t=e.target.result;
+    transactionAmountInput.value=t.amount;
+    transactionDescInput.value=t.description;
+    loadTransactionTypes();
+    transactionTypeSelect.value=t.type;
+    openModal("modalTransaction");
+    saveTransactionBtn.onclick=()=>{
+      t.amount=parseFloat(transactionAmountInput.value)||t.amount;
+      t.description=transactionDescInput.value||t.description;
+      t.type=transactionTypeSelect.value;
+      db.transaction("transactionTypes","readonly").objectStore("transactionTypes").get(t.type).onsuccess=(e)=>{
+        t.sign=e.target.result.sign;
+        tx.put(t).onsuccess=()=>{
+          closeModal("modalTransaction");
+          loadTransactions();
+        };
+      };
+    };
+  };
+}
+
+function deleteTransaction(id){
+  if(!confirm("Eliminar transacción?")) return;
+  db.transaction("transactions","readwrite").objectStore("transactions").delete(id).onsuccess=loadTransactions;
+}
+
+function updateAccountBalance(balance){
+  db.transaction("accounts","readwrite").objectStore("accounts").get(selectedAccountId).onsuccess=(e)=>{
+    const acc=e.target.result; acc.balance=balance;
+    db.transaction("accounts","readwrite").objectStore("accounts").put(acc).onsuccess=loadAccounts;
+  };
+}
+
+// --- Tipos de Movimiento ---
+addTypeBtn.addEventListener("click",()=>{
+  typeNameInput.value=""; typeSignInput.value="+";
+  openModal("modalType");
 });
+
+saveTypeBtn.addEventListener("click",()=>{
+  const name=typeNameInput.value;
+  const sign=typeSignInput.value;
+  if(!name) return;
+  db.transaction("transactionTypes","readwrite").objectStore("transactionTypes").put({type:name, sign}).onsuccess=()=>{
+    closeModal("modalType");
+    loadTransactionTypes();
+  };
+});
+
+function loadTransactionTypes(){
+  const tx=db.transaction("transactionTypes","readonly").objectStore("transactionTypes");
+  tx.getAll().onsuccess=(e)=>{
+    transactionTypeSelect.innerHTML="";
+    typeList.innerHTML="";
+    e.target.result.forEach(t=>{
+      const opt=document.createElement("option"); opt.value=t.type; opt.textContent=t.type; transactionTypeSelect.appendChild(opt);
+
+      const li=document.createElement("li");
+      const infoDiv=document.createElement("div"); infoDiv.className="type-info";
+      const nameSpan=document.createElement("span"); nameSpan.className="name"; nameSpan.textContent=t.type;
+      const descSpan=document.createElement("span"); descSpan.className="description"; descSpan.textContent=t.sign==="+"?"Positivo":"Negativo";
+      infoDiv.append(nameSpan,descSpan);
+
+      const actionsDiv=document.createElement("div"); actionsDiv.className="type-actions";
+      const editBtn=document.createElement("button"); editBtn.textContent="✏️"; editBtn.title="Editar"; editBtn.onclick=()=>{
+        typeNameInput.value=t.type; typeSignInput.value=t.sign; openModal("modalType");
+        saveTypeBtn.onclick=()=>{
+          t.type=typeNameInput.value||t.type;
+          t.sign=typeSignInput.value||t.sign;
+          db.transaction("transactionTypes","readwrite").objectStore("transactionTypes").put(t).onsuccess=()=>{
+            closeModal("modalType"); loadTransactionTypes();
+          };
+        };
+      };
+      const delBtn=document.createElement("button"); delBtn.textContent="🗑️"; delBtn.title="Borrar"; delBtn.onclick=()=>{
+        if(!confirm("Eliminar tipo?")) return;
+        db.transaction("transactionTypes","readwrite").objectStore("transactionTypes").delete(t.type).onsuccess=loadTransactionTypes;
+      };
+      actionsDiv.append(editBtn,delBtn);
+
+      li.append(infoDiv,actionsDiv);
+      typeList.appendChild(li);
+    });
+  };
+}
