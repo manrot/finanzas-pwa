@@ -23,13 +23,18 @@
   <!-- Cuentas -->
   <section id="accountsSection" class="section">
     <h2>Lista de Cuentas</h2>
-    <button id="addAccountBtn">+ Nueva Cuenta</button>
+    <button id="addAccountBtn" class="green-btn">+ Nueva Cuenta</button>
     <ul id="accountList"></ul>
   </section>
 
   <!-- Transacciones -->
   <section id="transactionsSection" class="section" style="display:none;">
     <h2>Transacciones</h2>
+    <div>
+      <label>Desde: <input type="date" id="fromDate"></label>
+      <label>Hasta: <input type="date" id="toDate"></label>
+      <button onclick="loadTransactions()">Filtrar</button>
+    </div>
     <button id="addTransactionBtn">+ Nueva Transacción</button>
     <ul id="transactionList"></ul>
     <h3>Saldo: <span id="balance">0</span></h3>
@@ -57,11 +62,16 @@
   <!-- Gráficos -->
   <section id="chartsSection" class="section" style="display:none;">
     <h2>Gráficos por Tipo de Transacción</h2>
+    <div>
+      <label>Cuenta: <select id="chartAccountSelect"></select></label>
+      <label>Desde: <input type="date" id="chartFrom"></label>
+      <label>Hasta: <input type="date" id="chartTo"></label>
+      <button onclick="loadChart()">Actualizar</button>
+    </div>
     <canvas id="chartCanvas"></canvas>
   </section>
 
   <!-- Modales -->
-  <!-- Modal Cuenta -->
   <div id="modalAccount" class="modal">
     <div class="modal-content">
       <h3>Cuenta</h3>
@@ -72,7 +82,6 @@
     </div>
   </div>
 
-  <!-- Modal Transacción -->
   <div id="modalTransaction" class="modal">
     <div class="modal-content">
       <h3>Transacción</h3>
@@ -84,7 +93,6 @@
     </div>
   </div>
 
-  <!-- Modal Tipo -->
   <div id="modalType" class="modal">
     <div class="modal-content">
       <h3>Tipo de Movimiento</h3>

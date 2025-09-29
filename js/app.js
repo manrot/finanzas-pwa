@@ -5,7 +5,8 @@ let selectedAccountId = null;
 const request = indexedDB.open("FinanzasDB",1);
 request.onupgradeneeded = (e)=>{
   db = e.target.result;
-  if(!db.objectStoreNames.contains("accounts")) db.createObjectStore("accounts",{keyPath:"id",autoIncrement:true});
+  if(!db.objectStoreNames.contains("accounts"))
+    db.createObjectStore("accounts",{keyPath:"id",autoIncrement:true});
   if(!db.objectStoreNames.contains("transactions")){
     const store = db.createObjectStore("transactions",{keyPath:"id",autoIncrement:true});
     store.createIndex("accountId","accountId",{unique:false});
@@ -30,22 +31,18 @@ const transactionList = document.getElementById("transactionList");
 const typeList = document.getElementById("typeList");
 const transactionsMenuBtn = document.getElementById("transactionsMenuBtn");
 const balanceSpan = document.getElementById("balance");
-
 const accountNameInput = document.getElementById("accountNameInput");
 const accountDescInput = document.getElementById("accountDescInput");
 const saveAccountBtn = document.getElementById("saveAccountBtn");
 const addAccountBtn = document.getElementById("addAccountBtn");
-
 const transactionAmountInput = document.getElementById("transactionAmountInput");
 const transactionDescInput = document.getElementById("transactionDescInput");
 const transactionTypeSelect = document.getElementById("transactionTypeSelect");
 const saveTransactionBtn = document.getElementById("saveTransactionBtn");
 const addTransactionBtn = document.getElementById("addTransactionBtn");
-
 const typeNameInput = document.getElementById("typeNameInput");
 const typeSignInput = document.getElementById("typeSignInput");
 const saveTypeBtn = document.getElementById("saveTypeBtn");
-const addTypeBtn = document.getElementById("addTypeBtn");
 
 // --- Secciones ---
 function showSection(id){
@@ -59,7 +56,8 @@ function closeModal(id){ document.getElementById(id).style.display="none"; }
 
 // --- Cuentas ---
 addAccountBtn.addEventListener("click",()=>{
-  accountNameInput.value=""; accountDescInput.value="";
+  accountNameInput.value="";
+  accountDescInput.value="";
   openModal("modalAccount");
 });
 
@@ -78,23 +76,51 @@ function loadAccounts(){
   const tx = db.transaction("accounts","readonly").objectStore("accounts");
   tx.getAll().onsuccess=(e)=>{
     accountList.innerHTML="";
+    const chartSelect = document.getElementById("chartAccountSelect");
+    if(chartSelect) chartSelect.innerHTML="";
     e.target.result.forEach(acc=>{
       const li=document.createElement("li");
-      const infoDiv=document.createElement("div"); infoDiv.className="account-info";
-      const nameSpan=document.createElement("span"); nameSpan.className="name"; nameSpan.textContent=acc.name;
-      const descSpan=document.createElement("span"); descSpan.className="description"; descSpan.textContent=acc.description || "";
-      const saldoSpan=document.createElement("span"); saldoSpan.className="description"; saldoSpan.textContent="Saldo: "+(acc.balance||0);
+      const infoDiv=document.createElement("div");
+      infoDiv.className="account-info";
+      const nameSpan=document.createElement("span");
+      nameSpan.className="name";
+      nameSpan.textContent=acc.name;
+      const descSpan=document.createElement("span");
+      descSpan.className="description";
+      descSpan.textContent=acc.description || "";
+      const saldoSpan=document.createElement("span");
+      saldoSpan.className="saldo";
+      saldoSpan.textContent="Saldo: "+(acc.balance||0);
       infoDiv.append(nameSpan,descSpan,saldoSpan);
 
-      const actionsDiv=document.createElement("div"); actionsDiv.className="account-actions";
-      const editBtn=document.createElement("button"); editBtn.textContent="✏️"; editBtn.title="Editar"; editBtn.onclick=()=>editAccount(acc.id);
-      const delBtn=document.createElement("button"); delBtn.textContent="🗑️"; delBtn.title="Borrar"; delBtn.onclick=()=>deleteAccount(acc.id);
-      const viewBtn=document.createElement("button"); viewBtn.textContent="👁️"; viewBtn.title="Ver"; viewBtn.onclick=()=>{ selectedAccountId=acc.id; showSection('transactions'); loadTransactions(); };
-      const chartBtn=document.createElement("button"); chartBtn.textContent="📊"; chartBtn.title="Gráfico"; chartBtn.onclick=()=>{ selectedAccountId=acc.id; showSection('charts'); loadChart(); };
-      actionsDiv.append(editBtn,delBtn,viewBtn,chartBtn);
+      const actionsDiv=document.createElement("div");
+      actionsDiv.className="account-actions";
 
+      const editBtn=document.createElement("button");
+      editBtn.textContent="✏️"; editBtn.title="Editar";
+      editBtn.onclick=()=>editAccount(acc.id);
+
+      const delBtn=document.createElement("button");
+      delBtn.textContent="🗑️"; delBtn.title="Borrar";
+      delBtn.onclick=()=>deleteAccount(acc.id);
+
+      const txBtn=document.createElement("button");
+      txBtn.textContent="💰"; txBtn.title="Transacciones";
+      txBtn.onclick=()=>{
+        selectedAccountId=acc.id;
+        showSection('transactions');
+        loadTransactions();
+      };
+
+      actionsDiv.append(editBtn,delBtn,txBtn);
       li.append(infoDiv,actionsDiv);
       accountList.appendChild(li);
+
+      if(chartSelect){
+        const opt = document.createElement("option");
+        opt.value = acc.id; opt.textContent = acc.name;
+        chartSelect.appendChild(opt);
+      }
     });
     transactionsMenuBtn.disabled=!e.target.result.length;
   };
@@ -123,13 +149,16 @@ function deleteAccount(id){
   const tx = db.transaction(["accounts","transactions"],"readwrite");
   tx.objectStore("accounts").delete(id);
   const transStore=tx.objectStore("transactions");
-  transStore.index("accountId").getAll(id).onsuccess=function(e){ e.target.result.forEach(t=>transStore.delete(t.id)); };
+  transStore.index("accountId").getAll(id).onsuccess=function(e){
+    e.target.result.forEach(t=>transStore.delete(t.id));
+  };
   tx.oncomplete=loadAccounts;
 }
 
 // --- Transacciones ---
 addTransactionBtn.addEventListener("click",()=>{
-  transactionAmountInput.value=""; transactionDescInput.value="";
+  transactionAmountInput.value="";
+  transactionDescInput.value="";
   loadTransactionTypes();
   openModal("modalTransaction");
 });
@@ -139,12 +168,17 @@ saveTransactionBtn.addEventListener("click",()=>{
   const typeName=transactionTypeSelect.value;
   const desc=transactionDescInput.value;
   if(!selectedAccountId || !amount || !typeName) return;
-
-  const txStore=db.transaction(["transactions","transactionTypes"],"readonly");
-  txStore.objectStore("transactionTypes").get(typeName).onsuccess=(e)=>{
+  db.transaction("transactionTypes","readonly").objectStore("transactionTypes").get(typeName).onsuccess=(e)=>{
     const signo=e.target.result.sign;
     const tx=db.transaction("transactions","readwrite").objectStore("transactions");
-    tx.add({accountId:selectedAccountId, type:typeName, amount, sign:signo, date:new Date().toISOString(), description:desc}).onsuccess=()=>{
+    tx.add({
+      accountId:selectedAccountId,
+      type:typeName,
+      amount,
+      sign:signo,
+      date:new Date().toISOString(),
+      description:desc
+    }).onsuccess=()=>{
       closeModal("modalTransaction");
       loadTransactions();
     };
@@ -153,21 +187,36 @@ saveTransactionBtn.addEventListener("click",()=>{
 
 function loadTransactions(){
   if(!selectedAccountId) return;
+  const fromDate=document.getElementById("fromDate").value;
+  const toDate=document.getElementById("toDate").value;
   const tx = db.transaction("transactions","readonly").objectStore("transactions");
   const index = tx.index("accountId");
   index.getAll(selectedAccountId).onsuccess=(e)=>{
     transactionList.innerHTML="";
     let balance=0;
     e.target.result.forEach(t=>{
+      const date = t.date.split("T")[0];
+      if((fromDate && date<fromDate) || (toDate && date>toDate)) return;
+
       const li=document.createElement("li");
-      const infoDiv=document.createElement("div"); infoDiv.className="transaction-info";
-      const nameSpan=document.createElement("span"); nameSpan.className="name"; nameSpan.textContent=t.type+" - "+t.amount;
-      const descSpan=document.createElement("span"); descSpan.className="description"; descSpan.textContent=t.description||""+" | "+t.date.split("T")[0];
+      const infoDiv=document.createElement("div");
+      infoDiv.className="transaction-info";
+      const nameSpan=document.createElement("span");
+      nameSpan.className="name";
+      nameSpan.textContent="Monto: "+t.amount;
+      const descSpan=document.createElement("span");
+      descSpan.className="description";
+      descSpan.textContent=(t.description||"") + " | "+date;
       infoDiv.append(nameSpan,descSpan);
 
-      const actionsDiv=document.createElement("div"); actionsDiv.className="transaction-actions";
-      const editBtn=document.createElement("button"); editBtn.textContent="✏️"; editBtn.title="Editar"; editBtn.onclick=()=>editTransaction(t.id);
-      const delBtn=document.createElement("button"); delBtn.textContent="🗑️"; delBtn.title="Borrar"; delBtn.onclick=()=>deleteTransaction(t.id);
+      const actionsDiv=document.createElement("div");
+      actionsDiv.className="transaction-actions";
+      const editBtn=document.createElement("button");
+      editBtn.textContent="✏️"; editBtn.title="Editar";
+      editBtn.onclick=()=>editTransaction(t.id);
+      const delBtn=document.createElement("button");
+      delBtn.textContent="🗑️"; delBtn.title="Borrar";
+      delBtn.onclick=()=>deleteTransaction(t.id);
       actionsDiv.append(editBtn,delBtn);
 
       li.append(infoDiv,actionsDiv);
@@ -211,14 +260,16 @@ function deleteTransaction(id){
 
 function updateAccountBalance(balance){
   db.transaction("accounts","readwrite").objectStore("accounts").get(selectedAccountId).onsuccess=(e)=>{
-    const acc=e.target.result; acc.balance=balance;
+    const acc=e.target.result;
+    acc.balance=balance;
     db.transaction("accounts","readwrite").objectStore("accounts").put(acc).onsuccess=loadAccounts;
   };
 }
 
 // --- Tipos de Movimiento ---
 addTypeBtn.addEventListener("click",()=>{
-  typeNameInput.value=""; typeSignInput.value="+";
+  typeNameInput.value="";
+  typeSignInput.value="+";
   openModal("modalType");
 });
 
@@ -238,31 +289,43 @@ function loadTransactionTypes(){
     transactionTypeSelect.innerHTML="";
     typeList.innerHTML="";
     e.target.result.forEach(t=>{
-      const opt=document.createElement("option"); opt.value=t.type; opt.textContent=t.type; transactionTypeSelect.appendChild(opt);
+      const opt=document.createElement("option");
+      opt.value=t.type; opt.textContent=t.type;
+      transactionTypeSelect.appendChild(opt);
 
       const li=document.createElement("li");
-      const infoDiv=document.createElement("div"); infoDiv.className="type-info";
-      const nameSpan=document.createElement("span"); nameSpan.className="name"; nameSpan.textContent=t.type;
-      const descSpan=document.createElement("span"); descSpan.className="description"; descSpan.textContent=t.sign==="+"?"Positivo":"Negativo";
+      const infoDiv=document.createElement("div");
+      infoDiv.className="type-info";
+      const nameSpan=document.createElement("span");
+      nameSpan.className="name"; nameSpan.textContent=t.type;
+      const descSpan=document.createElement("span");
+      descSpan.className="description"; descSpan.textContent=t.sign==="+"?"Positivo":"Negativo";
       infoDiv.append(nameSpan,descSpan);
 
-      const actionsDiv=document.createElement("div"); actionsDiv.className="type-actions";
-      const editBtn=document.createElement("button"); editBtn.textContent="✏️"; editBtn.title="Editar"; editBtn.onclick=()=>{
-        typeNameInput.value=t.type; typeSignInput.value=t.sign; openModal("modalType");
+      const actionsDiv=document.createElement("div");
+      actionsDiv.className="type-actions";
+      const editBtn=document.createElement("button");
+      editBtn.textContent="✏️"; editBtn.title="Editar";
+      editBtn.onclick=()=>{
+        typeNameInput.value=t.type;
+        typeSignInput.value=t.sign;
+        openModal("modalType");
         saveTypeBtn.onclick=()=>{
           t.type=typeNameInput.value||t.type;
           t.sign=typeSignInput.value||t.sign;
           db.transaction("transactionTypes","readwrite").objectStore("transactionTypes").put(t).onsuccess=()=>{
-            closeModal("modalType"); loadTransactionTypes();
+            closeModal("modalType");
+            loadTransactionTypes();
           };
         };
       };
-      const delBtn=document.createElement("button"); delBtn.textContent="🗑️"; delBtn.title="Borrar"; delBtn.onclick=()=>{
+      const delBtn=document.createElement("button");
+      delBtn.textContent="🗑️"; delBtn.title="Borrar";
+      delBtn.onclick=()=>{
         if(!confirm("Eliminar tipo?")) return;
         db.transaction("transactionTypes","readwrite").objectStore("transactionTypes").delete(t.type).onsuccess=loadTransactionTypes;
       };
       actionsDiv.append(editBtn,delBtn);
-
       li.append(infoDiv,actionsDiv);
       typeList.appendChild(li);
     });
