@@ -3,20 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Finanzas App</title>
+<title>Finanzas</title>
 <link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="css/style.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 <header>
-  <h1>Finanzas App</h1>
-  <nav>
-    <button onclick="showSection('accounts')">Cuentas</button>
-    <button onclick="showSection('transactions')" id="transactionsMenuBtn" disabled>Transacciones</button>
-    <button onclick="showSection('types')">Tipos</button>
-    <button onclick="showSection('importExport')">Import/Export</button>
-    <button onclick="showSection('charts')">Gráficos</button>
+  <nav id="mainNav">
+    <button id="menuToggle">☰ Menú</button>
+    <div class="nav-links">
+      <button onclick="showSection('accounts')">Cuentas</button>
+      <button onclick="showSection('transactions')" id="transactionsMenuBtn" disabled>Transacciones</button>
+      <button onclick="showSection('types')">Tipos</button>
+      <button onclick="showSection('importExport')">Import/Export</button>
+      <button onclick="showSection('charts')">Gráficos</button>
+    </div>
   </nav>
 </header>
 
