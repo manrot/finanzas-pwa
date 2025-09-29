@@ -36,7 +36,6 @@ nav {
 
 .nav-links {
   display: flex;
-  flex-wrap: wrap;
   gap: 0.5rem;
 }
 
@@ -194,11 +193,16 @@ canvas {
     display: none;
     flex-direction: column;
     gap: 0.25rem;
-    margin-top: 0.5rem;
+    width: 100%;
   }
 
   .nav-links.show {
     display: flex;
+  }
+
+  .nav-links button {
+    width: 100%;
+    text-align: left;
   }
 
   ul li {
@@ -212,6 +216,22 @@ canvas {
 
   .filters {
     flex-direction: column;
+  }
+}
+
+@media (min-width: 769px) {
+  .nav-links {
+    display: flex !important;
+    flex-direction: row;
+  }
+
+  #menuToggle {
+    display: none;
+  }
+
+  .nav-links button {
+    width: auto;
+    text-align: center;
   }
 }
 

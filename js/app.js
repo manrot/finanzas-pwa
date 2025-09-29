@@ -446,7 +446,11 @@ function populateChartAccounts() {
         });
     };
 }
+const navLinks = document.querySelector(".nav-links");
 
+menuToggle.addEventListener("click", () => {
+  navLinks.classList.toggle("show");
+});
 function loadChart() {
     // Aquí puedes implementar chart.js u otra librería usando chartAccountSelect.value
 }
