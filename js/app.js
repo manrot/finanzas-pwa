@@ -140,24 +140,25 @@ function loadAccounts() {
         e.target.result.forEach(acc => {
             const li = document.createElement("li");
 
-            const infoDiv = document.createElement("div");
-            infoDiv.className = "account-info";
+            // --- Contenedor Principal de Información (izquierda) ---
+            const mainInfoDiv = document.createElement("div");
+            mainInfoDiv.className = "account-main-info";
 
             const nameSpan = document.createElement("span");
             nameSpan.className = "name";
             nameSpan.textContent = acc.name;
 
             const descSpan = document.createElement("span");
-            descSpan.className = "description"; // 🚩 Clase usada para el nuevo estilo vertical
+            descSpan.className = "description";
             descSpan.textContent = acc.description || "Sin descripción";
 
-            const saldoSpan = document.createElement("span");
-            saldoSpan.className = "saldo";
-            saldoSpan.textContent = "Saldo: " + (acc.balance || 0).toFixed(2);
+            mainInfoDiv.append(nameSpan, descSpan);
 
-            // Orden de inserción para mostrar Nombre, Descripción y luego Saldo
-            infoDiv.append(nameSpan, descSpan, saldoSpan); 
+            // --- Contenedor de Saldo y Acciones (derecha) ---
+            const balanceActionsDiv = document.createElement("div");
+            balanceActionsDiv.className = "account-balance-actions";
 
+            // Botones de acción (arriba del saldo)
             const actionsDiv = document.createElement("div");
             actionsDiv.className = "account-actions";
             
@@ -191,9 +192,24 @@ function loadAccounts() {
                 showSection('charts');
                 loadChart();
             };
-
             actionsDiv.append(editBtn, delBtn, viewBtn, chartBtn);
-            li.append(infoDiv, actionsDiv);
+
+
+            // Saldo
+            const saldoLabel = document.createElement("span");
+            saldoLabel.className = "saldo-label";
+            saldoLabel.textContent = "Saldo disponible";
+
+            const saldoAmount = document.createElement("span");
+            saldoAmount.className = "saldo-amount";
+            saldoAmount.textContent = "$ " + (acc.balance || 0).toFixed(2);
+            
+            // Adjuntar acciones y saldo al contenedor derecho
+            balanceActionsDiv.append(actionsDiv, saldoLabel, saldoAmount);
+
+
+            // Adjuntar ambos contenedores al <li>
+            li.append(mainInfoDiv, balanceActionsDiv);
             accountList.appendChild(li);
         });
 
