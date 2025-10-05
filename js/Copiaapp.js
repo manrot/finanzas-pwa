@@ -6,7 +6,7 @@ const request = indexedDB.open("FinanzasDB", 1);
 
 request.onupgradeneeded = (e) => {
     db = e.target.result;
-    
+
     if (!db.objectStoreNames.contains("accounts"))
         db.createObjectStore("accounts", { keyPath: "id", autoIncrement: true });
 
@@ -17,7 +17,6 @@ request.onupgradeneeded = (e) => {
 
     if (!db.objectStoreNames.contains("transactionTypes")) {
         const store = db.createObjectStore("transactionTypes", { keyPath: "type" });
-        // Tipos por defecto
         ["entrada", "salida", "entrada prestamo", "salida prestamo"].forEach(t =>
             store.add({ type: t, sign: t.startsWith("entrada") ? "+" : "-" })
         );
@@ -63,67 +62,33 @@ function showSection(id) {
     document.querySelectorAll(".section").forEach(s => s.style.display = "none");
     document.getElementById(id + "Section").style.display = "block";
 
-    // Actualiza el estado de los enlaces del menú (Opcional)
-    document.querySelectorAll('.sidebar-nav a').forEach(link => {
-        link.classList.remove('active');
-        if (link.getAttribute('onclick').includes(id)) {
-            link.classList.add('active');
-        }
-    });
-
     if (id === "accounts") {
-        loadAccounts();
+        loadAccounts(); // recarga las cuentas y combos
     } else if (id === "transactions") {
-        loadTransactions();
+        loadTransactions(); // recarga transacciones para la cuenta seleccionada
     }
 }
-// Muestra la sección inicial al cargar
-document.addEventListener('DOMContentLoaded', () => {
-    showSection('accounts');
+
+// --- Menú responsive ---
+const menuToggle = document.getElementById("menuToggle");
+const mainNav = document.getElementById("mainNav");
+
+menuToggle?.addEventListener("click", () => {
+    mainNav.classList.toggle("show");
 });
 
-// --- Menú Lateral (Sidebar) ---
-const menuToggle = document.getElementById("menuToggle");
-const sidebarMenu = document.getElementById("sidebarMenu");
-const menuOverlay = document.getElementById("menuOverlay");
+// --- Modales ---
+function openModal(id) { document.getElementById(id).style.display = "flex"; }
+function closeModal(id) { document.getElementById(id).style.display = "none"; }
 
-function openSidebar() {
-    sidebarMenu.classList.add("open");
-    menuOverlay.classList.add("open");
-}
-
-function closeSidebar() {
-    sidebarMenu.classList.remove("open");
-    menuOverlay.classList.remove("open");
-}
-
-menuToggle.addEventListener("click", openSidebar);
-menuOverlay.addEventListener("click", closeSidebar); 
-
-// --- Modales (Añadimos transición CSS al abrir/cerrar) ---
-function openModal(id) { 
-    const modal = document.getElementById(id);
-    modal.style.display = "flex"; 
-    // Pequeño timeout para que la transición CSS se active
-    setTimeout(() => { modal.classList.add('active'); }, 10);
-}
-function closeModal(id) { 
-    const modal = document.getElementById(id);
-    modal.classList.remove('active'); 
-    // Esconder después de la transición (0.3s)
-    setTimeout(() => { modal.style.display = "none"; }, 300);
-}
-
-// --- Cuentas (Lógica sin cambios, usa los nuevos open/closeModal) ---
+// --- Cuentas ---
 addAccountBtn.addEventListener("click", () => {
     accountNameInput.value = "";
     accountDescInput.value = "";
-    // Reestablecer el handler de Guardar
-    saveAccountBtn.onclick = saveNewAccount;
     openModal("modalAccount");
 });
 
-function saveNewAccount() {
+saveAccountBtn.addEventListener("click", () => {
     const name = accountNameInput.value;
     const desc = accountDescInput.value;
     if (!name) return;
@@ -133,8 +98,7 @@ function saveNewAccount() {
         closeModal("modalAccount");
         loadAccounts();
     };
-}
-saveAccountBtn.onclick = saveNewAccount; // Asigna el handler por defecto
+});
 
 function loadAccounts() {
     const tx = db.transaction("accounts", "readonly").objectStore("accounts");
@@ -235,16 +199,15 @@ function deleteAccount(id) {
     tx.oncomplete = loadAccounts;
 }
 
-// --- Transacciones (Lógica sin cambios) ---
+// --- Transacciones ---
 addTransactionBtn.addEventListener("click", () => {
     transactionAmountInput.value = "";
     transactionDescInput.value = "";
     loadTransactionTypes();
-    saveTransactionBtn.onclick = saveNewTransaction; // Asignar handler por defecto
     openModal("modalTransaction");
 });
 
-function saveNewTransaction() {
+saveTransactionBtn.addEventListener("click", () => {
     const amount = parseFloat(transactionAmountInput.value);
     const typeName = transactionTypeSelect.value;
     const desc = transactionDescInput.value;
@@ -265,9 +228,7 @@ function saveNewTransaction() {
             loadTransactions();
         };
     };
-}
-saveTransactionBtn.onclick = saveNewTransaction;
-
+});
 function loadTransactions() {
     const selectedFilterAccount = accountFilterSelect.value;
     const accountId = selectedFilterAccount || selectedAccountId;
@@ -306,32 +267,17 @@ function loadTransactions() {
             dateSpan.textContent = new Date(t.date).toLocaleDateString();
 
             infoDiv.append(nameSpan, dateSpan);
-            
-            // Acciones a la derecha
-            const actionsDiv = document.createElement("div");
-            actionsDiv.className = "transaction-actions";
 
-            // Monto
+            // Monto derecha
             const amountSpan = document.createElement("span");
             amountSpan.className = "balance " + (t.sign === "+" ? "income" : "expense");
             amountSpan.textContent = (t.sign === "+" ? "+ " : "- ") + t.amount;
 
-            const editBtn = document.createElement("button");
-            editBtn.textContent = "✏️";
-            editBtn.title = "Editar";
-            editBtn.onclick = () => editTransaction(t.id);
-
-            const delBtn = document.createElement("button");
-            delBtn.textContent = "🗑️";
-            delBtn.title = "Borrar";
-            delBtn.onclick = () => deleteTransaction(t.id);
-            
-            actionsDiv.append(editBtn, delBtn); // Botones de acción
-            li.append(infoDiv, amountSpan, actionsDiv); // Se añade actionsDiv para editar/borrar
+            li.append(infoDiv, amountSpan);
             transactionList.appendChild(li);
         });
 
-        balanceSpan.textContent = balance.toFixed(2); // Formatear saldo
+        balanceSpan.textContent = balance;
         updateAccountBalance(balance);
     };
 }
@@ -351,7 +297,7 @@ function editTransaction(id) {
         transactionTypeSelect.value = t.type;
         openModal("modalTransaction");
 
-        saveTransactionBtn.onclick = () => { // Handler específico para edición
+        saveTransactionBtn.onclick = () => {
             t.amount = parseFloat(transactionAmountInput.value) || t.amount;
             t.description = transactionDescInput.value || t.description;
             t.type = transactionTypeSelect.value;
@@ -361,7 +307,6 @@ function editTransaction(id) {
                 tx.put(t).onsuccess = () => {
                     closeModal("modalTransaction");
                     loadTransactions();
-                    saveTransactionBtn.onclick = saveNewTransaction; // Reestablecer
                 };
             };
         };
@@ -376,25 +321,19 @@ function deleteTransaction(id) {
 function updateAccountBalance(balance) {
     db.transaction("accounts", "readwrite").objectStore("accounts").get(selectedAccountId).onsuccess = (e) => {
         const acc = e.target.result;
-        // Solo actualizar si la cuenta existe y el balance es numérico
-        if (acc && !isNaN(balance)) {
-             acc.balance = balance;
-             db.transaction("accounts", "readwrite").objectStore("accounts").put(acc).onsuccess = loadAccounts;
-        } else {
-             loadAccounts(); // Recargar si no hay cuenta seleccionada o hay error
-        }
+        acc.balance = balance;
+        db.transaction("accounts", "readwrite").objectStore("accounts").put(acc).onsuccess = loadAccounts;
     };
 }
 
-// --- Tipos de Movimiento (Lógica sin cambios) ---
+// --- Tipos de Movimiento ---
 addTypeBtn.addEventListener("click", () => {
     typeNameInput.value = "";
     typeSignInput.value = "+";
-    saveTypeBtn.onclick = saveNewType; // Asignar handler por defecto
     openModal("modalType");
 });
 
-function saveNewType() {
+saveTypeBtn.addEventListener("click", () => {
     const name = typeNameInput.value;
     const sign = typeSignInput.value;
     if (!name) return;
@@ -402,8 +341,7 @@ function saveNewType() {
         closeModal("modalType");
         loadTransactionTypes();
     };
-}
-saveTypeBtn.onclick = saveNewType;
+});
 
 function loadTransactionTypes() {
     const tx = db.transaction("transactionTypes", "readonly").objectStore("transactionTypes");
@@ -442,13 +380,12 @@ function loadTransactionTypes() {
                 typeSignInput.value = t.sign;
                 openModal("modalType");
 
-                saveTypeBtn.onclick = () => { // Handler específico para edición
+                saveTypeBtn.onclick = () => {
                     t.type = typeNameInput.value || t.type;
                     t.sign = typeSignInput.value || t.sign;
                     db.transaction("transactionTypes", "readwrite").objectStore("transactionTypes").put(t).onsuccess = () => {
                         closeModal("modalType");
                         loadTransactionTypes();
-                        saveTypeBtn.onclick = saveNewType; // Reestablecer
                     };
                 };
             };
@@ -468,7 +405,7 @@ function loadTransactionTypes() {
     };
 }
 
-// --- Filtrar por cuenta (Lógica sin cambios) ---
+// --- Filtrar por cuenta ---
 function populateTransactionAccounts() {
     const tx = db.transaction("accounts", "readonly").objectStore("accounts");
     tx.getAll().onsuccess = (e) => {
@@ -482,7 +419,7 @@ function populateTransactionAccounts() {
     };
 }
 
-// --- Gráficos (Lógica sin cambios) ---
+// --- Gráficos ---
 function populateChartAccounts() {
     const tx = db.transaction("accounts", "readonly").objectStore("accounts");
     tx.getAll().onsuccess = (e) => {
@@ -495,7 +432,11 @@ function populateChartAccounts() {
         });
     };
 }
+const navLinks = document.querySelector(".nav-links");
 
+menuToggle.addEventListener("click", () => {
+  navLinks.classList.toggle("show");
+});
 function loadChart() {
     // Aquí puedes implementar chart.js u otra librería usando chartAccountSelect.value
 }

@@ -1,62 +1,240 @@
-* { box-sizing: border-box; margin:0; padding:0; font-family:Arial,sans-serif; }
-body { background:#f5f5f5; color:#333; line-height:1.4; }
-
-/* Header y menú */
-header { background:#4CAF50; }
-nav { display:flex; justify-content:space-between; align-items:center; padding:0.5rem 1rem; }
-
-#menuToggle { display:none; font-size:1.5rem; background:none; border:none; color:white; cursor:pointer; }
-
-.nav-links { display:flex; gap:0.5rem; }
-.nav-links button {
-  background:white; color:#4CAF50; border:none; padding:0.5rem 1rem; border-radius:5px;
-  cursor:pointer; transition:0.2s;
+/* --- Variables de Diseño Moderno --- */
+:root {
+    --color-primary: #0088cc;      /* Azul moderno (similar a Telegram) */
+    --color-secondary: #2ecc71;    /* Verde para éxito/ingreso */
+    --color-danger: #e74c3c;       /* Rojo para gastos/cancelar */
+    --color-background-light: #f5f5f5;
+    --color-text-dark: #333;
+    --color-sidebar-bg: #ffffff;
+    --color-sidebar-active: #e0f0ff; /* Fondo sutil para hover/activo */
+    --shadow-light: 0 2px 5px rgba(0,0,0,0.08);
+    --shadow-deep: 0 0 15px rgba(0, 0, 0, 0.2);
+    --border-radius: 8px;
 }
-.nav-links button:disabled { opacity:0.5; cursor:not-allowed; }
-.nav-links button:hover:not(:disabled) { background:#45a049; color:white; }
 
-/* Secciones */
-.section { max-width:1000px; margin:1rem auto; padding:1rem; background:white; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.1); }
+* { box-sizing: border-box; margin:0; padding:0; font-family:'Helvetica Neue', Arial, sans-serif; }
+body { background:var(--color-background-light); color:var(--color-text-dark); line-height:1.4; }
+
+/* --- HEADER Y NAVEGACIÓN PRINCIPAL (Fijo Arriba) --- */
+.main-header {
+    background: var(--color-primary);
+    color: white;
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+    position: sticky; 
+    top: 0;
+    z-index: 50;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.header-title {
+    font-size: 1.2rem;
+    font-weight: 500;
+    margin-left: 1rem;
+}
+.menu-toggle { 
+    font-size: 1.5rem; 
+    background: none; 
+    border: none; 
+    color: white; 
+    cursor: pointer; 
+    padding: 0.25rem;
+}
+
+/* --- MENÚ LATERAL DESLIZABLE (Telegram Style) --- */
+.sidebar-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 280px; 
+    height: 100%;
+    background: var(--color-sidebar-bg);
+    box-shadow: var(--shadow-deep);
+    z-index: 1000;
+    
+    /* Transición de entrada/salida */
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+    overflow-y: auto; /* Para menús largos */
+}
+.sidebar-menu.open {
+    transform: translateX(0);
+}
+
+/* --- Overlay (Fondo semi-transparente) --- */
+.menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease-in-out;
+}
+.menu-overlay.open {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* --- Estilos de la cabecera del menú (Perfil) --- */
+.sidebar-header {
+    background: var(--color-primary);
+    color: white;
+    padding: 1.5rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+.profile-info {
+    display: flex;
+    flex-direction: column;
+}
+.profile-img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 0.75rem;
+    border: 3px solid white;
+}
+.user-details {
+    display: flex;
+    flex-direction: column;
+}
+.user-name { font-weight: bold; font-size: 1.1rem; }
+.user-phone { font-size: 0.85rem; opacity: 0.8; }
+.mode-toggle { 
+    background: none; 
+    border: none; 
+    color: white; 
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+/* --- Estilos de los Enlaces de Navegación --- */
+.sidebar-nav {
+    padding: 0.5rem 0;
+}
+.sidebar-nav a {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    text-decoration: none;
+    color: var(--color-text-dark);
+    font-size: 1rem;
+    transition: background-color 0.15s ease;
+}
+.sidebar-nav a:hover {
+    background-color: var(--color-sidebar-active);
+    color: var(--color-primary);
+}
+.sidebar-nav a i {
+    margin-right: 1.5rem;
+    font-size: 1.2rem;
+    min-width: 20px; 
+}
+
+
+/* --- SECCIONES Y BOTONES --- */
+.section { max-width:1000px; margin:1rem auto; padding:1rem; background:white; border-radius:var(--border-radius); box-shadow:var(--shadow-light); }
 h2 { margin-bottom:1rem; }
 
 /* Botones principales */
-.btn-add { background:#2196F3; color:white; border:none; padding:0.5rem 1rem; margin-bottom:1rem; border-radius:5px; cursor:pointer; }
-.btn-add:hover { background:#0b7dda; }
+.btn-add { 
+    background:var(--color-primary); 
+    color:white; 
+    border:none; 
+    padding:0.6rem 1.2rem; 
+    margin-bottom:1rem; 
+    border-radius:var(--border-radius); 
+    cursor:pointer; 
+    transition:background-color 0.2s; 
+    font-weight: 600;
+}
+.btn-add:hover { background:#0066a2; } /* Tono más oscuro de primary */
 
-/* Listas */
+/* Listas (Cuentas, Tipos) */
 ul { list-style:none; margin-top:0.5rem; }
-ul li { display:flex; justify-content:space-between; align-items:center; padding:0.5rem; border-bottom:1px solid #ddd; flex-wrap:wrap; }
-.account-info, .transaction-info, .type-info { display:flex; flex-direction:column; flex:1; margin-right:0.5rem; }
-.account-actions, .transaction-actions, .type-actions { display:flex; gap:0.25rem; margin-top:0.25rem; }
+ul li { 
+    display:flex; justify-content:space-between; align-items:center; 
+    padding:1rem; border-bottom:1px solid #eee; flex-wrap:wrap; 
+    background: white; border-radius:var(--border-radius); margin-bottom: 0.5rem;
+    box-shadow: var(--shadow-light);
+}
+.account-info, .transaction-info, .type-info { flex:1; margin-right:0.5rem; }
+.account-info .name, .type-info .name { font-weight: bold; font-size: 1.1rem; }
+.account-actions, .transaction-actions, .type-actions { display:flex; gap:0.5rem; margin-top:0.25rem; }
+.account-actions button, .transaction-actions button, .type-actions button {
+    background: #f0f0f0;
+    border: 1px solid #ddd;
+    padding: 0.4rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.account-actions button:hover, .transaction-actions button:hover, .type-actions button:hover {
+    background: #ddd;
+}
+
 
 /* Filtros */
-.filters { display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:1rem; }
+.filters { display:flex; flex-wrap:wrap; gap:1rem; margin-bottom:1rem; background: #fafafa; padding: 1rem; border-radius: var(--border-radius); }
 .filters label { display:flex; flex-direction:column; font-size:0.9rem; }
+.filters input, .filters select { padding: 0.5rem; border: 1px solid #ccc; border-radius: 5px; margin-top: 0.2rem;}
 
-/* Modales */
-.modal { position:fixed; top:0; left:0; width:100%; height:100%; display:none; justify-content:center; align-items:center; background:rgba(0,0,0,0.5); padding:1rem; z-index:1000; }
-.modal-content { background:white; padding:1rem; border-radius:8px; width:100%; max-width:400px; display:flex; flex-direction:column; gap:0.5rem; }
-.modal input, .modal select, .modal button { padding:0.5rem; border-radius:5px; border:1px solid #ccc; }
-.modal button { background:#4CAF50; color:white; border:none; cursor:pointer; }
-.modal button.modal-cancel { background:#f44336; }
+
+/* --- Modales (Con Transiciones) --- */
+.modal { 
+    position:fixed; top:0; left:0; width:100%; height:100%; 
+    display: none; /* Controlado por JS, pero escondido por defecto */
+    justify-content:center; align-items:center; 
+    background:rgba(0,0,0,0.5); padding:1rem; z-index:1500; 
+    
+    /* Transición de opacidad */
+    opacity: 0; 
+    transition: opacity 0.3s ease;
+}
+.modal.active {
+    display: flex; 
+    opacity: 1;
+}
+
+.modal-content { 
+    background:white; padding:1.5rem; border-radius:var(--border-radius); 
+    width:100%; max-width:400px; display:flex; flex-direction:column; gap:1rem; 
+    box-shadow: var(--shadow-deep);
+    
+    /* Transición de contenido */
+    transform: translateY(-50px); 
+    transition: transform 0.3s ease;
+}
+.modal.active .modal-content {
+    transform: translateY(0); 
+}
+
+.modal input, .modal select, .modal button { padding:0.7rem; border-radius:5px; border:1px solid #ccc; }
+.modal button { background:var(--color-primary); color:white; border:none; cursor:pointer; font-weight: 600;}
+.modal button.modal-cancel { background:var(--color-danger); }
 .modal button:hover { opacity:0.9; }
 
-/* Gráficos */
-canvas { width:100% !important; height:auto !important; }
 /* --- Lista de Transacciones Mejorada --- */
-#transactionList li {
+.transaction-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
   background: #fff;
   padding: 12px 16px;
   border-radius: 12px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+  box-shadow: var(--shadow-light);
   margin-bottom: 0.5rem;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-#transactionList li:hover {
+.transaction-item:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0,0,0,0.12);
 }
@@ -69,7 +247,7 @@ canvas { width:100% !important; height:auto !important; }
 .transaction-info .name {
   font-weight: 600;
   font-size: 1rem;
-  color: #333;
+  color: var(--color-text-dark);
 }
 
 .transaction-info .description {
@@ -78,88 +256,37 @@ canvas { width:100% !important; height:auto !important; }
   margin-top: 2px;
 }
 
-.transaction-info .balance {
-  font-weight: 700;
-  font-size: 1rem;
-}
-
-.transaction-info .balance.income { color: #2ecc71; } /* Verde para ingresos */
-.transaction-info .balance.expense { color: #e74c3c; } /* Rojo para gastos */
-.transaction-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #fff;
-  padding: 12px 16px;
-  border-radius: 12px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.08);
-  margin-bottom: 0.5rem;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.transaction-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.12);
-}
-
-.transaction-info .name {
-  font-weight: 600;
-  font-size: 1rem;
-}
-
-.transaction-info .description {
-  font-size: 0.85rem;
-  color: #555;
-  margin-top: 2px;
-}
-
-.balance.income { color: #2ecc71; font-weight: 700; }
-.balance.expense { color: #e74c3c; font-weight: 700; }
+.balance.income { color: var(--color-secondary); font-weight: 700; }
+.balance.expense { color: var(--color-danger); font-weight: 700; }
 
 
-/* Responsive */
+/* --- RESPONSIVE --- */
 @media(max-width:768px){
-  #menuToggle { display:block; }
-  .nav-links { display:none; flex-direction:column; gap:0.25rem; width:100%; }
-  .nav-links.show { display:flex; }
-  .nav-links button { width:100%; text-align:left; }
-  ul li { flex-direction:column; align-items:flex-start; }
-  .account-actions, .transaction-actions, .type-actions { margin-top:0.5rem; }
-  .filters { flex-direction:column; }
-
-   .transaction-item {
-    flex-direction: row;          /* Mantener info a la izquierda y monto a la derecha */
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .transaction-info {
-    flex: 1;
-    margin-right: 8px;
-  }
-
-  .balance {
-    flex-shrink: 0;
-  }
+    /* En móvil, el sidebar (280px) funciona bien */
+    
+    .filters { 
+        flex-direction: column; 
+        gap: 0.5rem;
+    }
+    .filters label {
+        width: 100%;
+    }
+    
+    ul li { 
+        flex-direction: column; 
+        align-items: flex-start; 
+    }
+    .account-actions, .transaction-actions, .type-actions { 
+        margin-top:0.5rem; 
+        width: 100%;
+        justify-content: flex-end; /* Alinea los botones a la derecha */
+    }
 }
 
 @media(max-width:480px){
   .btn-add { width:100%; text-align:center; }
   .modal-content { max-width:90%; }
 }
-.transaction-item {
-  display: flex !important;
-  flex-direction: row !important;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-}
 
-.transaction-item .transaction-info {
-  flex: 1;
-  margin-right: 8px;
-}
-
-.transaction-item .balance {
-  flex-shrink: 0;
-}
+/* Gráficos */
+canvas { width:100% !important; height:auto !important; }
