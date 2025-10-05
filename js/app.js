@@ -62,10 +62,8 @@ function showSection(id) {
     document.querySelectorAll(".section").forEach(s => s.style.display = "none");
     document.getElementById(id + "Section").style.display = "block";
 
-    // Actualiza el estado de los enlaces del menú (Opcional)
     document.querySelectorAll('.sidebar-nav a').forEach(link => {
         link.classList.remove('active');
-        // Usa una comprobación más robusta para el enlace activo
         if (link.getAttribute('onclick')?.includes(`showSection('${id}')`)) {
             link.classList.add('active');
         }
@@ -77,7 +75,7 @@ function showSection(id) {
         loadTransactions();
     }
 }
-// Muestra la sección inicial al cargar
+
 document.addEventListener('DOMContentLoaded', () => {
     showSection('accounts');
 });
@@ -106,13 +104,11 @@ menuOverlay.addEventListener("click", closeSidebar);
 function openModal(id) { 
     const modal = document.getElementById(id);
     modal.style.display = "flex"; 
-    // Pequeño timeout para que la transición CSS se active
     setTimeout(() => { modal.classList.add('active'); }, 10);
 }
 function closeModal(id) { 
     const modal = document.getElementById(id);
     modal.classList.remove('active'); 
-    // Esconder después de la transición (0.3s)
     setTimeout(() => { modal.style.display = "none"; }, 300);
 }
 
@@ -152,18 +148,19 @@ function loadAccounts() {
             nameSpan.textContent = acc.name;
 
             const descSpan = document.createElement("span");
-            descSpan.className = "description";
-            descSpan.textContent = acc.description || "";
+            descSpan.className = "description"; // 🚩 Clase usada para el nuevo estilo vertical
+            descSpan.textContent = acc.description || "Sin descripción";
 
             const saldoSpan = document.createElement("span");
             saldoSpan.className = "saldo";
-            saldoSpan.textContent = "Saldo: " + (acc.balance || 0).toFixed(2); // Formato de saldo
+            saldoSpan.textContent = "Saldo: " + (acc.balance || 0).toFixed(2);
 
-            infoDiv.append(nameSpan, descSpan, saldoSpan);
+            // Orden de inserción para mostrar Nombre, Descripción y luego Saldo
+            infoDiv.append(nameSpan, descSpan, saldoSpan); 
 
             const actionsDiv = document.createElement("div");
             actionsDiv.className = "account-actions";
-
+            
             const editBtn = document.createElement("button");
             editBtn.textContent = "✏️";
             editBtn.title = "Editar";
@@ -220,7 +217,7 @@ function editAccount(id) {
             tx.put(acc).onsuccess = () => {
                 closeModal("modalAccount");
                 loadAccounts();
-                saveAccountBtn.onclick = saveNewAccount; // Reestablecer
+                saveAccountBtn.onclick = saveNewAccount;
             };
         };
     };
@@ -287,7 +284,7 @@ function loadTransactions() {
         transactionList.innerHTML = "";
         let balance = 0;
 
-        data.sort((a,b)=> new Date(b.date) - new Date(a.date)); // Mostrar más reciente primero
+        data.sort((a,b)=> new Date(b.date) - new Date(a.date));
 
         data.forEach(t => {
             balance += t.sign === "+" ? t.amount : -t.amount;
@@ -308,7 +305,7 @@ function loadTransactions() {
             dateSpan.textContent = new Date(t.date).toLocaleDateString();
 
             infoDiv.append(nameSpan, dateSpan);
-
+            
             // Monto derecha
             const amountSpan = document.createElement("span");
             amountSpan.className = "balance " + (t.sign === "+" ? "income" : "expense");
