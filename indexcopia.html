@@ -3,73 +3,101 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Finanzas</title>
+<title>Finanzas PWA</title>
 <link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="css/style.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-<header>
-  <nav>
-    <button id="menuToggle">☰ Menú</button>
-    <div class="nav-links">
-      <button onclick="showSection('accounts')">Cuentas</button>
-      <button onclick="showSection('transactions')" id="transactionsMenuBtn" disabled>Transacciones</button>
-      <button onclick="showSection('types')">Tipos</button>
-      <button onclick="showSection('importExport')">Import/Export</button>
-      <button onclick="showSection('charts')">Gráficos</button>
+
+<div id="menuOverlay" class="menu-overlay"></div> 
+
+<aside id="sidebarMenu" class="sidebar-menu">
+    <div class="sidebar-header">
+        <div class="profile-info">
+            <img src="img/profile.jpg" alt="Perfil" class="profile-img"> 
+            <div class="user-details">
+                <span class="user-name">Usuario PWA</span>
+                <span class="user-phone">600 600 600</span>
+            </div>
+        </div>
+        <button class="mode-toggle">🌙</button> 
     </div>
-  </nav>
+
+    <nav class="sidebar-nav">
+        <a href="#" onclick="showSection('accounts'); closeSidebar()">
+            <i class="icon-cuentas">💰</i> Cuentas
+        </a>
+        <a href="#" onclick="showSection('transactions'); closeSidebar()" id="transactionsMenuBtn">
+            <i class="icon-transacciones">🔄</i> Transacciones
+        </a>
+        <a href="#" onclick="showSection('types'); closeSidebar()">
+            <i class="icon-tipos">🏷️</i> Tipos
+        </a>
+        <a href="#" onclick="showSection('importExport'); closeSidebar()">
+            <i class="icon-export">📤</i> Import/Export
+        </a>
+        <a href="#" onclick="showSection('charts'); closeSidebar()">
+            <i class="icon-charts">📈</i> Gráficos
+        </a>
+    </nav>
+</aside>
+
+<header class="main-header">
+    <button id="menuToggle" class="menu-toggle">☰</button>
+    <h1 class="header-title">Finanzas</h1>
 </header>
 
-<section id="accountsSection" class="section">
-  <h2>Lista de Cuentas</h2>
-  <button id="addAccountBtn" class="btn-add">+ Nueva Cuenta</button>
-  <ul id="accountList"></ul>
-</section>
+<main>
+    <section id="accountsSection" class="section">
+      <h2>Lista de Cuentas</h2>
+      <button id="addAccountBtn" class="btn-add">+ Nueva Cuenta</button>
+      <ul id="accountList"></ul>
+    </section>
+    
+    <section id="transactionsSection" class="section" style="display:none;">
+      <h2>Transacciones</h2>
+      <div class="filters">
+        <label>Desde: <input type="date" id="fromDate"></label>
+        <label>Hasta: <input type="date" id="toDate"></label>
+        <label>Cuenta:
+          <select id="accountFilterSelect"></select>
+        </label>
+      </div>
+      <button id="addTransactionBtn" class="btn-add">+ Nueva Transacción</button>
+      <ul id="transactionList"></ul>
+      <h3>Saldo: <span id="balance">0</span></h3>
+    </section>
+    
+    <section id="typesSection" class="section" style="display:none;">
+      <h2>Tipos de Movimiento</h2>
+      <button id="addTypeBtn" class="btn-add">+ Nuevo Tipo</button>
+      <ul id="typeList"></ul>
+    </section>
+    
+    <section id="importExportSection" class="section" style="display:none;">
+      <h2>Importar / Exportar Datos</h2>
+      <div class="filters">
+        <button id="exportBtn" class="btn-add">Exportar Datos</button>
+        <input type="file" id="importFile">
+        <button id="importBtn" class="btn-add">Importar Datos</button>
+      </div>
+    </section>
+    
+    <section id="chartsSection" class="section" style="display:none;">
+      <h2>Gráficos por Tipo de Transacción</h2>
+      <div class="filters">
+        <label>Cuenta: 
+          <select id="chartAccountSelect" onchange="loadChart()"></select>
+        </label>
+        <label>Desde: <input type="date" id="chartFrom" onchange="loadChart()"></label>
+        <label>Hasta: <input type="date" id="chartTo" onchange="loadChart()"></label>
+      </div>
+      <canvas id="chartCanvas"></canvas>
+    </section>
+</main>
 
-<section id="transactionsSection" class="section" style="display:none;">
-  <h2>Transacciones</h2>
-  <div class="filters">
-    <label>Desde: <input type="date" id="fromDate"></label>
-    <label>Hasta: <input type="date" id="toDate"></label>
-    <label>Cuenta:
-      <select id="accountFilterSelect"></select>
-    </label>
-  </div>
-  <button id="addTransactionBtn" class="btn-add">+ Nueva Transacción</button>
-  <ul id="transactionList"></ul>
-  <h3>Saldo: <span id="balance">0</span></h3>
-</section>
 
-<section id="typesSection" class="section" style="display:none;">
-  <h2>Tipos de Movimiento</h2>
-  <button id="addTypeBtn" class="btn-add">+ Nuevo Tipo</button>
-  <ul id="typeList"></ul>
-</section>
-
-<section id="importExportSection" class="section" style="display:none;">
-  <h2>Importar / Exportar Datos</h2>
-  <div class="filters">
-    <button id="exportBtn" class="btn-add">Exportar Datos</button>
-    <input type="file" id="importFile">
-    <button id="importBtn" class="btn-add">Importar Datos</button>
-  </div>
-</section>
-
-<section id="chartsSection" class="section" style="display:none;">
-  <h2>Gráficos por Tipo de Transacción</h2>
-  <div class="filters">
-    <label>Cuenta: 
-      <select id="chartAccountSelect" onchange="loadChart()"></select>
-    </label>
-    <label>Desde: <input type="date" id="chartFrom" onchange="loadChart()"></label>
-    <label>Hasta: <input type="date" id="chartTo" onchange="loadChart()"></label>
-  </div>
-  <canvas id="chartCanvas"></canvas>
-</section>
-
-<!-- Modales (igual que antes) -->
 <div id="modalAccount" class="modal">
   <div class="modal-content">
     <h3>Cuenta</h3>
@@ -107,6 +135,7 @@
 <script src="js/app.js"></script>
 <script src="js/charts.js"></script>
 <script>
+// Registro del Service Worker (PWA)
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("service-worker.js")
   .then(()=>console.log("Service Worker registrado"))

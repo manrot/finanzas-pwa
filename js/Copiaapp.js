@@ -1,12 +1,13 @@
 let db;
 let selectedAccountId = null;
+let editingAccountId = null; // Variable global para rastrear si estamos editando
 
 // --- Inicializar IndexedDB ---
 const request = indexedDB.open("FinanzasDB", 1);
 
 request.onupgradeneeded = (e) => {
     db = e.target.result;
-
+    
     if (!db.objectStoreNames.contains("accounts"))
         db.createObjectStore("accounts", { keyPath: "id", autoIncrement: true });
 
@@ -62,44 +63,97 @@ function showSection(id) {
     document.querySelectorAll(".section").forEach(s => s.style.display = "none");
     document.getElementById(id + "Section").style.display = "block";
 
+    document.querySelectorAll('.sidebar-nav a').forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('onclick')?.includes(`showSection('${id}')`)) {
+            link.classList.add('active');
+        }
+    });
+
     if (id === "accounts") {
-        loadAccounts(); // recarga las cuentas y combos
+        loadAccounts();
     } else if (id === "transactions") {
-        loadTransactions(); // recarga transacciones para la cuenta seleccionada
+        loadTransactions();
     }
 }
 
-// --- Menú responsive ---
-const menuToggle = document.getElementById("menuToggle");
-const mainNav = document.getElementById("mainNav");
-
-menuToggle?.addEventListener("click", () => {
-    mainNav.classList.toggle("show");
+document.addEventListener('DOMContentLoaded', () => {
+    showSection('accounts');
 });
 
-// --- Modales ---
-function openModal(id) { document.getElementById(id).style.display = "flex"; }
-function closeModal(id) { document.getElementById(id).style.display = "none"; }
+
+// 🚩 LÓGICA DE MENÚ LATERAL (SIDEBAR) 🚩
+const menuToggle = document.getElementById("menuToggle");
+const sidebarMenu = document.getElementById("sidebarMenu");
+const menuOverlay = document.getElementById("menuOverlay");
+
+function openSidebar() {
+    sidebarMenu.classList.add("open");
+    menuOverlay.classList.add("open");
+}
+
+function closeSidebar() {
+    sidebarMenu.classList.remove("open");
+    menuOverlay.classList.remove("open");
+}
+
+menuToggle.addEventListener("click", openSidebar);
+menuOverlay.addEventListener("click", closeSidebar); 
+
+
+// 🚩 LÓGICA DE MODALES (Añade transición) 🚩
+function openModal(id) { 
+    const modal = document.getElementById(id);
+    modal.style.display = "flex"; 
+    setTimeout(() => { modal.classList.add('active'); }, 10);
+}
+function closeModal(id) { 
+    const modal = document.getElementById(id);
+    modal.classList.remove('active'); 
+    setTimeout(() => { modal.style.display = "none"; }, 300);
+}
 
 // --- Cuentas ---
+
 addAccountBtn.addEventListener("click", () => {
     accountNameInput.value = "";
     accountDescInput.value = "";
+    editingAccountId = null; // Reiniciar
     openModal("modalAccount");
 });
 
-saveAccountBtn.addEventListener("click", () => {
+// 🚩 Función unificada para guardar cuenta nueva o editada
+function saveAccountOrEdit() {
     const name = accountNameInput.value;
     const desc = accountDescInput.value;
     if (!name) return;
 
     const tx = db.transaction("accounts", "readwrite").objectStore("accounts");
-    tx.add({ name, description: desc, balance: 0 }).onsuccess = () => {
-        closeModal("modalAccount");
-        loadAccounts();
-    };
-});
 
+    if (editingAccountId !== null) {
+        // --- LÓGICA DE EDICIÓN CORREGIDA ---
+        tx.get(editingAccountId).onsuccess = (e) => {
+            const acc = e.target.result;
+            acc.name = name;
+            acc.description = desc;
+            tx.put(acc).onsuccess = () => {
+                closeModal("modalAccount");
+                loadAccounts();
+                editingAccountId = null; // Limpiar
+            };
+        };
+    } else {
+        // --- LÓGICA DE NUEVA CUENTA ---
+        tx.add({ name, description: desc, balance: 0 }).onsuccess = () => {
+            closeModal("modalAccount");
+            loadAccounts();
+        };
+    }
+}
+// Asignar la función unificada al botón una sola vez
+saveAccountBtn.onclick = saveAccountOrEdit; 
+
+// 🚩 Función loadAccounts con colores condicionales
 function loadAccounts() {
     const tx = db.transaction("accounts", "readonly").objectStore("accounts");
     tx.getAll().onsuccess = (e) => {
@@ -107,8 +161,9 @@ function loadAccounts() {
         e.target.result.forEach(acc => {
             const li = document.createElement("li");
 
-            const infoDiv = document.createElement("div");
-            infoDiv.className = "account-info";
+            // --- Contenedor Principal de Información (izquierda) ---
+            const mainInfoDiv = document.createElement("div");
+            mainInfoDiv.className = "account-main-info";
 
             const nameSpan = document.createElement("span");
             nameSpan.className = "name";
@@ -116,17 +171,18 @@ function loadAccounts() {
 
             const descSpan = document.createElement("span");
             descSpan.className = "description";
-            descSpan.textContent = acc.description || "";
+            descSpan.textContent = acc.description || "Sin descripción";
 
-            const saldoSpan = document.createElement("span");
-            saldoSpan.className = "saldo";
-            saldoSpan.textContent = "Saldo: " + (acc.balance || 0);
+            mainInfoDiv.append(nameSpan, descSpan);
 
-            infoDiv.append(nameSpan, descSpan, saldoSpan);
+            // --- Contenedor de Saldo y Acciones (derecha) ---
+            const balanceActionsDiv = document.createElement("div");
+            balanceActionsDiv.className = "account-balance-actions";
 
+            // Botones de acción (arriba del saldo)
             const actionsDiv = document.createElement("div");
             actionsDiv.className = "account-actions";
-
+            
             const editBtn = document.createElement("button");
             editBtn.textContent = "✏️";
             editBtn.title = "Editar";
@@ -157,9 +213,32 @@ function loadAccounts() {
                 showSection('charts');
                 loadChart();
             };
-
             actionsDiv.append(editBtn, delBtn, viewBtn, chartBtn);
-            li.append(infoDiv, actionsDiv);
+
+
+            // Saldo
+            const saldoLabel = document.createElement("span");
+            saldoLabel.className = "saldo-label";
+            saldoLabel.textContent = "Saldo disponible";
+
+            const saldoAmount = document.createElement("span");
+            saldoAmount.className = "saldo-amount";
+            saldoAmount.textContent = "$ " + (acc.balance || 0).toFixed(2);
+            
+            // 🚩 APLICAR CLASE DE COLOR CONDICIONAL
+            const balance = acc.balance || 0;
+            if (balance >= 0) {
+                saldoAmount.classList.add("positive");
+            } else {
+                saldoAmount.classList.add("negative");
+            }
+            
+            // Adjuntar acciones y saldo al contenedor derecho
+            balanceActionsDiv.append(actionsDiv, saldoLabel, saldoAmount);
+
+
+            // Adjuntar ambos contenedores al <li>
+            li.append(mainInfoDiv, balanceActionsDiv);
             accountList.appendChild(li);
         });
 
@@ -169,22 +248,16 @@ function loadAccounts() {
     };
 }
 
+// 🚩 Función editAccount corregida para establecer editingAccountId
 function editAccount(id) {
-    const tx = db.transaction("accounts", "readwrite").objectStore("accounts");
+    const tx = db.transaction("accounts", "readonly").objectStore("accounts");
     tx.get(id).onsuccess = (e) => {
         const acc = e.target.result;
         accountNameInput.value = acc.name;
         accountDescInput.value = acc.description;
+        editingAccountId = acc.id; // Establecer la cuenta que se está editando
         openModal("modalAccount");
-
-        saveAccountBtn.onclick = () => {
-            acc.name = accountNameInput.value || acc.name;
-            acc.description = accountDescInput.value || acc.description;
-            tx.put(acc).onsuccess = () => {
-                closeModal("modalAccount");
-                loadAccounts();
-            };
-        };
+        // saveAccountBtn.onclick ya es saveAccountOrEdit, que usará editingAccountId
     };
 }
 
@@ -204,10 +277,11 @@ addTransactionBtn.addEventListener("click", () => {
     transactionAmountInput.value = "";
     transactionDescInput.value = "";
     loadTransactionTypes();
+    saveTransactionBtn.onclick = saveNewTransaction;
     openModal("modalTransaction");
 });
 
-saveTransactionBtn.addEventListener("click", () => {
+function saveNewTransaction() {
     const amount = parseFloat(transactionAmountInput.value);
     const typeName = transactionTypeSelect.value;
     const desc = transactionDescInput.value;
@@ -228,7 +302,9 @@ saveTransactionBtn.addEventListener("click", () => {
             loadTransactions();
         };
     };
-});
+}
+saveTransactionBtn.onclick = saveNewTransaction;
+
 function loadTransactions() {
     const selectedFilterAccount = accountFilterSelect.value;
     const accountId = selectedFilterAccount || selectedAccountId;
@@ -246,7 +322,7 @@ function loadTransactions() {
         transactionList.innerHTML = "";
         let balance = 0;
 
-        data.sort((a,b)=> new Date(a.date) - new Date(b.date));
+        data.sort((a,b)=> new Date(b.date) - new Date(a.date));
 
         data.forEach(t => {
             balance += t.sign === "+" ? t.amount : -t.amount;
@@ -267,17 +343,33 @@ function loadTransactions() {
             dateSpan.textContent = new Date(t.date).toLocaleDateString();
 
             infoDiv.append(nameSpan, dateSpan);
-
+            
             // Monto derecha
             const amountSpan = document.createElement("span");
             amountSpan.className = "balance " + (t.sign === "+" ? "income" : "expense");
             amountSpan.textContent = (t.sign === "+" ? "+ " : "- ") + t.amount;
+            
+            // Acciones a la derecha
+            const actionsDiv = document.createElement("div");
+            actionsDiv.className = "transaction-actions";
+            
+            const editBtn = document.createElement("button");
+            editBtn.textContent = "✏️";
+            editBtn.title = "Editar";
+            editBtn.onclick = () => editTransaction(t.id);
 
-            li.append(infoDiv, amountSpan);
+            const delBtn = document.createElement("button");
+            delBtn.textContent = "🗑️";
+            delBtn.title = "Borrar";
+            delBtn.onclick = () => deleteTransaction(t.id);
+            
+            actionsDiv.append(editBtn, delBtn);
+            
+            li.append(infoDiv, amountSpan, actionsDiv); 
             transactionList.appendChild(li);
         });
 
-        balanceSpan.textContent = balance;
+        balanceSpan.textContent = balance.toFixed(2);
         updateAccountBalance(balance);
     };
 }
@@ -297,7 +389,7 @@ function editTransaction(id) {
         transactionTypeSelect.value = t.type;
         openModal("modalTransaction");
 
-        saveTransactionBtn.onclick = () => {
+        saveTransactionBtn.onclick = () => { 
             t.amount = parseFloat(transactionAmountInput.value) || t.amount;
             t.description = transactionDescInput.value || t.description;
             t.type = transactionTypeSelect.value;
@@ -307,6 +399,7 @@ function editTransaction(id) {
                 tx.put(t).onsuccess = () => {
                     closeModal("modalTransaction");
                     loadTransactions();
+                    saveTransactionBtn.onclick = saveNewTransaction;
                 };
             };
         };
@@ -321,8 +414,12 @@ function deleteTransaction(id) {
 function updateAccountBalance(balance) {
     db.transaction("accounts", "readwrite").objectStore("accounts").get(selectedAccountId).onsuccess = (e) => {
         const acc = e.target.result;
-        acc.balance = balance;
-        db.transaction("accounts", "readwrite").objectStore("accounts").put(acc).onsuccess = loadAccounts;
+        if (acc && !isNaN(balance)) {
+             acc.balance = balance;
+             db.transaction("accounts", "readwrite").objectStore("accounts").put(acc).onsuccess = loadAccounts;
+        } else {
+             loadAccounts();
+        }
     };
 }
 
@@ -330,10 +427,11 @@ function updateAccountBalance(balance) {
 addTypeBtn.addEventListener("click", () => {
     typeNameInput.value = "";
     typeSignInput.value = "+";
+    saveTypeBtn.onclick = saveNewType;
     openModal("modalType");
 });
 
-saveTypeBtn.addEventListener("click", () => {
+function saveNewType() {
     const name = typeNameInput.value;
     const sign = typeSignInput.value;
     if (!name) return;
@@ -341,7 +439,8 @@ saveTypeBtn.addEventListener("click", () => {
         closeModal("modalType");
         loadTransactionTypes();
     };
-});
+}
+saveTypeBtn.onclick = saveNewType;
 
 function loadTransactionTypes() {
     const tx = db.transaction("transactionTypes", "readonly").objectStore("transactionTypes");
@@ -380,12 +479,13 @@ function loadTransactionTypes() {
                 typeSignInput.value = t.sign;
                 openModal("modalType");
 
-                saveTypeBtn.onclick = () => {
+                saveTypeBtn.onclick = () => { 
                     t.type = typeNameInput.value || t.type;
                     t.sign = typeSignInput.value || t.sign;
                     db.transaction("transactionTypes", "readwrite").objectStore("transactionTypes").put(t).onsuccess = () => {
                         closeModal("modalType");
                         loadTransactionTypes();
+                        saveTypeBtn.onclick = saveNewType;
                     };
                 };
             };
@@ -432,11 +532,7 @@ function populateChartAccounts() {
         });
     };
 }
-const navLinks = document.querySelector(".nav-links");
 
-menuToggle.addEventListener("click", () => {
-  navLinks.classList.toggle("show");
-});
 function loadChart() {
     // Aquí puedes implementar chart.js u otra librería usando chartAccountSelect.value
 }

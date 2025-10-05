@@ -86,10 +86,14 @@ document.addEventListener('DOMContentLoaded', () => {
 const menuToggle = document.getElementById("menuToggle");
 const sidebarMenu = document.getElementById("sidebarMenu");
 const menuOverlay = document.getElementById("menuOverlay");
+const contentWrapper = document.getElementById("contentWrapper");
 
 function openSidebar() {
-    sidebarMenu.classList.add("open");
-    menuOverlay.classList.add("open");
+    // 🚩 Abrir solo si es móvil (cuando el menú no es permanente, definido por CSS > 992px)
+    if (window.innerWidth < 992) {
+        sidebarMenu.classList.add("open");
+        menuOverlay.classList.add("open");
+    }
 }
 
 function closeSidebar() {
@@ -122,7 +126,7 @@ addAccountBtn.addEventListener("click", () => {
     openModal("modalAccount");
 });
 
-// 🚩 Función unificada para guardar cuenta nueva o editada
+// Función unificada para guardar cuenta nueva o editada
 function saveAccountOrEdit() {
     const name = accountNameInput.value;
     const desc = accountDescInput.value;
@@ -131,7 +135,7 @@ function saveAccountOrEdit() {
     const tx = db.transaction("accounts", "readwrite").objectStore("accounts");
 
     if (editingAccountId !== null) {
-        // --- LÓGICA DE EDICIÓN CORREGIDA ---
+        // LÓGICA DE EDICIÓN CORREGIDA
         tx.get(editingAccountId).onsuccess = (e) => {
             const acc = e.target.result;
             acc.name = name;
@@ -139,21 +143,20 @@ function saveAccountOrEdit() {
             tx.put(acc).onsuccess = () => {
                 closeModal("modalAccount");
                 loadAccounts();
-                editingAccountId = null; // Limpiar
+                editingAccountId = null; 
             };
         };
     } else {
-        // --- LÓGICA DE NUEVA CUENTA ---
+        // LÓGICA DE NUEVA CUENTA
         tx.add({ name, description: desc, balance: 0 }).onsuccess = () => {
             closeModal("modalAccount");
             loadAccounts();
         };
     }
 }
-// Asignar la función unificada al botón una sola vez
 saveAccountBtn.onclick = saveAccountOrEdit; 
 
-// 🚩 Función loadAccounts con colores condicionales
+// Función loadAccounts con colores condicionales
 function loadAccounts() {
     const tx = db.transaction("accounts", "readonly").objectStore("accounts");
     tx.getAll().onsuccess = (e) => {
@@ -225,7 +228,7 @@ function loadAccounts() {
             saldoAmount.className = "saldo-amount";
             saldoAmount.textContent = "$ " + (acc.balance || 0).toFixed(2);
             
-            // 🚩 APLICAR CLASE DE COLOR CONDICIONAL
+            // APLICAR CLASE DE COLOR CONDICIONAL
             const balance = acc.balance || 0;
             if (balance >= 0) {
                 saldoAmount.classList.add("positive");
@@ -248,7 +251,7 @@ function loadAccounts() {
     };
 }
 
-// 🚩 Función editAccount corregida para establecer editingAccountId
+// Función editAccount corregida para establecer editingAccountId
 function editAccount(id) {
     const tx = db.transaction("accounts", "readonly").objectStore("accounts");
     tx.get(id).onsuccess = (e) => {
@@ -257,7 +260,6 @@ function editAccount(id) {
         accountDescInput.value = acc.description;
         editingAccountId = acc.id; // Establecer la cuenta que se está editando
         openModal("modalAccount");
-        // saveAccountBtn.onclick ya es saveAccountOrEdit, que usará editingAccountId
     };
 }
 
