@@ -1,5 +1,6 @@
 let db;
 let selectedAccountId = null;
+let editingAccountId = null; // Variable global para rastrear si estamos editando
 
 // --- Inicializar IndexedDB ---
 const request = indexedDB.open("FinanzasDB", 1);
@@ -113,26 +114,46 @@ function closeModal(id) {
 }
 
 // --- Cuentas ---
+
 addAccountBtn.addEventListener("click", () => {
     accountNameInput.value = "";
     accountDescInput.value = "";
-    saveAccountBtn.onclick = saveNewAccount;
+    editingAccountId = null; // Reiniciar
     openModal("modalAccount");
 });
 
-function saveNewAccount() {
+// 🚩 Función unificada para guardar cuenta nueva o editada
+function saveAccountOrEdit() {
     const name = accountNameInput.value;
     const desc = accountDescInput.value;
     if (!name) return;
 
     const tx = db.transaction("accounts", "readwrite").objectStore("accounts");
-    tx.add({ name, description: desc, balance: 0 }).onsuccess = () => {
-        closeModal("modalAccount");
-        loadAccounts();
-    };
-}
-saveAccountBtn.onclick = saveNewAccount; 
 
+    if (editingAccountId !== null) {
+        // --- LÓGICA DE EDICIÓN CORREGIDA ---
+        tx.get(editingAccountId).onsuccess = (e) => {
+            const acc = e.target.result;
+            acc.name = name;
+            acc.description = desc;
+            tx.put(acc).onsuccess = () => {
+                closeModal("modalAccount");
+                loadAccounts();
+                editingAccountId = null; // Limpiar
+            };
+        };
+    } else {
+        // --- LÓGICA DE NUEVA CUENTA ---
+        tx.add({ name, description: desc, balance: 0 }).onsuccess = () => {
+            closeModal("modalAccount");
+            loadAccounts();
+        };
+    }
+}
+// Asignar la función unificada al botón una sola vez
+saveAccountBtn.onclick = saveAccountOrEdit; 
+
+// 🚩 Función loadAccounts con colores condicionales
 function loadAccounts() {
     const tx = db.transaction("accounts", "readonly").objectStore("accounts");
     tx.getAll().onsuccess = (e) => {
@@ -204,6 +225,14 @@ function loadAccounts() {
             saldoAmount.className = "saldo-amount";
             saldoAmount.textContent = "$ " + (acc.balance || 0).toFixed(2);
             
+            // 🚩 APLICAR CLASE DE COLOR CONDICIONAL
+            const balance = acc.balance || 0;
+            if (balance >= 0) {
+                saldoAmount.classList.add("positive");
+            } else {
+                saldoAmount.classList.add("negative");
+            }
+            
             // Adjuntar acciones y saldo al contenedor derecho
             balanceActionsDiv.append(actionsDiv, saldoLabel, saldoAmount);
 
@@ -219,23 +248,16 @@ function loadAccounts() {
     };
 }
 
+// 🚩 Función editAccount corregida para establecer editingAccountId
 function editAccount(id) {
-    const tx = db.transaction("accounts", "readwrite").objectStore("accounts");
+    const tx = db.transaction("accounts", "readonly").objectStore("accounts");
     tx.get(id).onsuccess = (e) => {
         const acc = e.target.result;
         accountNameInput.value = acc.name;
         accountDescInput.value = acc.description;
+        editingAccountId = acc.id; // Establecer la cuenta que se está editando
         openModal("modalAccount");
-
-        saveAccountBtn.onclick = () => {
-            acc.name = accountNameInput.value || acc.name;
-            acc.description = accountDescInput.value || acc.description;
-            tx.put(acc).onsuccess = () => {
-                closeModal("modalAccount");
-                loadAccounts();
-                saveAccountBtn.onclick = saveNewAccount;
-            };
-        };
+        // saveAccountBtn.onclick ya es saveAccountOrEdit, que usará editingAccountId
     };
 }
 

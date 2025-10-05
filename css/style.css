@@ -1,8 +1,8 @@
 /* --- Variables de Diseño Moderno --- */
 :root {
     --color-primary: #0088cc;      /* Azul moderno (similar a Telegram) */
-    --color-secondary: #2ecc71;    /* Verde para éxito/ingreso */
-    --color-danger: #e74c3c;       /* Rojo para gastos/cancelar */
+    --color-secondary: #2ecc71;    /* Verde para éxito/ingreso (Saldo Positivo) */
+    --color-danger: #e74c3c;       /* Rojo para gastos/cancelar (Saldo Negativo) */
     --color-background-light: #f5f5f5;
     --color-text-dark: #333;
     --color-sidebar-bg: #ffffff;
@@ -177,7 +177,7 @@ ul li {
     flex-wrap: wrap; 
 }
 
-/* 🚩 CORRECCIÓN CRÍTICA: Estructura de tarjetas de Cuentas */
+/* 🚩 Estructura de tarjetas de Cuentas */
 /* Contenedor de la información principal de la cuenta (Nombre, Descripción) */
 .account-main-info { 
     display: flex; 
@@ -215,8 +215,17 @@ ul li {
 .account-balance-actions .saldo-amount {
     font-weight: 700;
     font-size: 1.3rem; 
-    color: var(--color-text-dark); 
+    color: var(--color-text-dark); /* Color oscuro por defecto */
     margin-bottom: 0.5rem; 
+}
+
+/* 🟢 CLASES AÑADIDAS PARA EL COLOR CONDICIONAL DEL SALDO 🔴 */
+.account-balance-actions .saldo-amount.positive {
+    color: var(--color-secondary); /* Verde */
+}
+
+.account-balance-actions .saldo-amount.negative {
+    color: var(--color-danger); /* Rojo */
 }
 
 /* Estilo para los iconos de acción (Editar, Borrar, Ver, Gráfico) */
