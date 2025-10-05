@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Finanzas Personales</title>
+    <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     </head>
 <body>
     
@@ -73,10 +75,14 @@
                 <h2>Análisis Gráfico</h2>
                 <div class="filters">
                     <label>Cuenta para gráfico:
-                        <select id="chartAccountSelect"></select>
+                        <select id="chartAccountSelect" onchange="loadChart()"></select>
                     </label>
+
+    <label>Desde: <input type="date" id="chartFrom" onchange="loadChart()"></label>
+    <label>Hasta: <input type="date" id="chartTo" onchange="loadChart()"></label>
                 </div>
                 <canvas id="balanceChart"></canvas>
+                  <canvas id="chartCanvas"></canvas>
             </section>
 
             <section id="settingsSection" class="section" style="display:none;">
@@ -130,5 +136,14 @@
     </div>
     
     <script src="js/app.js"></script>
+    <script src="js/charts.js"></script>
+
+    <script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js")
+  .then(()=>console.log("Service Worker registrado"))
+  .catch(err=>console.log("Error:",err));
+}
+</script>
 </body>
 </html>
