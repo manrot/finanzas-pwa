@@ -17,7 +17,6 @@ request.onupgradeneeded = (e) => {
 
     if (!db.objectStoreNames.contains("transactionTypes")) {
         const store = db.createObjectStore("transactionTypes", { keyPath: "type" });
-        // Tipos por defecto
         ["entrada", "salida", "entrada prestamo", "salida prestamo"].forEach(t =>
             store.add({ type: t, sign: t.startsWith("entrada") ? "+" : "-" })
         );
@@ -66,7 +65,8 @@ function showSection(id) {
     // Actualiza el estado de los enlaces del menú (Opcional)
     document.querySelectorAll('.sidebar-nav a').forEach(link => {
         link.classList.remove('active');
-        if (link.getAttribute('onclick').includes(id)) {
+        // Usa una comprobación más robusta para el enlace activo
+        if (link.getAttribute('onclick')?.includes(`showSection('${id}')`)) {
             link.classList.add('active');
         }
     });
@@ -82,7 +82,8 @@ document.addEventListener('DOMContentLoaded', () => {
     showSection('accounts');
 });
 
-// --- Menú Lateral (Sidebar) ---
+
+// 🚩 LÓGICA DE MENÚ LATERAL (SIDEBAR) 🚩
 const menuToggle = document.getElementById("menuToggle");
 const sidebarMenu = document.getElementById("sidebarMenu");
 const menuOverlay = document.getElementById("menuOverlay");
@@ -100,7 +101,8 @@ function closeSidebar() {
 menuToggle.addEventListener("click", openSidebar);
 menuOverlay.addEventListener("click", closeSidebar); 
 
-// --- Modales (Añadimos transición CSS al abrir/cerrar) ---
+
+// 🚩 LÓGICA DE MODALES (Añade transición) 🚩
 function openModal(id) { 
     const modal = document.getElementById(id);
     modal.style.display = "flex"; 
@@ -114,11 +116,10 @@ function closeModal(id) {
     setTimeout(() => { modal.style.display = "none"; }, 300);
 }
 
-// --- Cuentas (Lógica sin cambios, usa los nuevos open/closeModal) ---
+// --- Cuentas ---
 addAccountBtn.addEventListener("click", () => {
     accountNameInput.value = "";
     accountDescInput.value = "";
-    // Reestablecer el handler de Guardar
     saveAccountBtn.onclick = saveNewAccount;
     openModal("modalAccount");
 });
@@ -134,7 +135,7 @@ function saveNewAccount() {
         loadAccounts();
     };
 }
-saveAccountBtn.onclick = saveNewAccount; // Asigna el handler por defecto
+saveAccountBtn.onclick = saveNewAccount; 
 
 function loadAccounts() {
     const tx = db.transaction("accounts", "readonly").objectStore("accounts");
@@ -156,7 +157,7 @@ function loadAccounts() {
 
             const saldoSpan = document.createElement("span");
             saldoSpan.className = "saldo";
-            saldoSpan.textContent = "Saldo: " + (acc.balance || 0);
+            saldoSpan.textContent = "Saldo: " + (acc.balance || 0).toFixed(2); // Formato de saldo
 
             infoDiv.append(nameSpan, descSpan, saldoSpan);
 
@@ -219,6 +220,7 @@ function editAccount(id) {
             tx.put(acc).onsuccess = () => {
                 closeModal("modalAccount");
                 loadAccounts();
+                saveAccountBtn.onclick = saveNewAccount; // Reestablecer
             };
         };
     };
@@ -235,12 +237,12 @@ function deleteAccount(id) {
     tx.oncomplete = loadAccounts;
 }
 
-// --- Transacciones (Lógica sin cambios) ---
+// --- Transacciones ---
 addTransactionBtn.addEventListener("click", () => {
     transactionAmountInput.value = "";
     transactionDescInput.value = "";
     loadTransactionTypes();
-    saveTransactionBtn.onclick = saveNewTransaction; // Asignar handler por defecto
+    saveTransactionBtn.onclick = saveNewTransaction;
     openModal("modalTransaction");
 });
 
@@ -285,7 +287,7 @@ function loadTransactions() {
         transactionList.innerHTML = "";
         let balance = 0;
 
-        data.sort((a,b)=> new Date(a.date) - new Date(b.date));
+        data.sort((a,b)=> new Date(b.date) - new Date(a.date)); // Mostrar más reciente primero
 
         data.forEach(t => {
             balance += t.sign === "+" ? t.amount : -t.amount;
@@ -306,16 +308,16 @@ function loadTransactions() {
             dateSpan.textContent = new Date(t.date).toLocaleDateString();
 
             infoDiv.append(nameSpan, dateSpan);
+
+            // Monto derecha
+            const amountSpan = document.createElement("span");
+            amountSpan.className = "balance " + (t.sign === "+" ? "income" : "expense");
+            amountSpan.textContent = (t.sign === "+" ? "+ " : "- ") + t.amount;
             
             // Acciones a la derecha
             const actionsDiv = document.createElement("div");
             actionsDiv.className = "transaction-actions";
-
-            // Monto
-            const amountSpan = document.createElement("span");
-            amountSpan.className = "balance " + (t.sign === "+" ? "income" : "expense");
-            amountSpan.textContent = (t.sign === "+" ? "+ " : "- ") + t.amount;
-
+            
             const editBtn = document.createElement("button");
             editBtn.textContent = "✏️";
             editBtn.title = "Editar";
@@ -326,12 +328,13 @@ function loadTransactions() {
             delBtn.title = "Borrar";
             delBtn.onclick = () => deleteTransaction(t.id);
             
-            actionsDiv.append(editBtn, delBtn); // Botones de acción
-            li.append(infoDiv, amountSpan, actionsDiv); // Se añade actionsDiv para editar/borrar
+            actionsDiv.append(editBtn, delBtn);
+            
+            li.append(infoDiv, amountSpan, actionsDiv); 
             transactionList.appendChild(li);
         });
 
-        balanceSpan.textContent = balance.toFixed(2); // Formatear saldo
+        balanceSpan.textContent = balance.toFixed(2);
         updateAccountBalance(balance);
     };
 }
@@ -351,7 +354,7 @@ function editTransaction(id) {
         transactionTypeSelect.value = t.type;
         openModal("modalTransaction");
 
-        saveTransactionBtn.onclick = () => { // Handler específico para edición
+        saveTransactionBtn.onclick = () => { 
             t.amount = parseFloat(transactionAmountInput.value) || t.amount;
             t.description = transactionDescInput.value || t.description;
             t.type = transactionTypeSelect.value;
@@ -361,7 +364,7 @@ function editTransaction(id) {
                 tx.put(t).onsuccess = () => {
                     closeModal("modalTransaction");
                     loadTransactions();
-                    saveTransactionBtn.onclick = saveNewTransaction; // Reestablecer
+                    saveTransactionBtn.onclick = saveNewTransaction;
                 };
             };
         };
@@ -376,21 +379,20 @@ function deleteTransaction(id) {
 function updateAccountBalance(balance) {
     db.transaction("accounts", "readwrite").objectStore("accounts").get(selectedAccountId).onsuccess = (e) => {
         const acc = e.target.result;
-        // Solo actualizar si la cuenta existe y el balance es numérico
         if (acc && !isNaN(balance)) {
              acc.balance = balance;
              db.transaction("accounts", "readwrite").objectStore("accounts").put(acc).onsuccess = loadAccounts;
         } else {
-             loadAccounts(); // Recargar si no hay cuenta seleccionada o hay error
+             loadAccounts();
         }
     };
 }
 
-// --- Tipos de Movimiento (Lógica sin cambios) ---
+// --- Tipos de Movimiento ---
 addTypeBtn.addEventListener("click", () => {
     typeNameInput.value = "";
     typeSignInput.value = "+";
-    saveTypeBtn.onclick = saveNewType; // Asignar handler por defecto
+    saveTypeBtn.onclick = saveNewType;
     openModal("modalType");
 });
 
@@ -442,13 +444,13 @@ function loadTransactionTypes() {
                 typeSignInput.value = t.sign;
                 openModal("modalType");
 
-                saveTypeBtn.onclick = () => { // Handler específico para edición
+                saveTypeBtn.onclick = () => { 
                     t.type = typeNameInput.value || t.type;
                     t.sign = typeSignInput.value || t.sign;
                     db.transaction("transactionTypes", "readwrite").objectStore("transactionTypes").put(t).onsuccess = () => {
                         closeModal("modalType");
                         loadTransactionTypes();
-                        saveTypeBtn.onclick = saveNewType; // Reestablecer
+                        saveTypeBtn.onclick = saveNewType;
                     };
                 };
             };
@@ -468,7 +470,7 @@ function loadTransactionTypes() {
     };
 }
 
-// --- Filtrar por cuenta (Lógica sin cambios) ---
+// --- Filtrar por cuenta ---
 function populateTransactionAccounts() {
     const tx = db.transaction("accounts", "readonly").objectStore("accounts");
     tx.getAll().onsuccess = (e) => {
@@ -482,7 +484,7 @@ function populateTransactionAccounts() {
     };
 }
 
-// --- Gráficos (Lógica sin cambios) ---
+// --- Gráficos ---
 function populateChartAccounts() {
     const tx = db.transaction("accounts", "readonly").objectStore("accounts");
     tx.getAll().onsuccess = (e) => {
