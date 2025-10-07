@@ -23,11 +23,11 @@
             <button class="mode-toggle">☀️</button>
         </div>
         <nav class="sidebar-nav">
-            <a href="#" onclick="showSection('accounts')"><i class="fas fa-wallet"></i>Cuentas</a>
-            <a href="#" id="transactionsMenuBtn" onclick="showSection('transactions')"><i class="fas fa-exchange-alt"></i>Transacciones</a>
-            <a href="#" onclick="showSection('types')"><i class="fas fa-tags"></i>Tipos de Mov.</a>
-            <a href="#" onclick="showSection('charts')"><i class="fas fa-chart-line"></i>Gráficos</a>
-            <a href="#" onclick="showSection('settings')"><i class="fas fa-cog"></i>Configuración</a>
+            <a href="#" onclick="showSection('accounts')"><i class="fas fa-wallet"></i> Cuentas</a>
+            <a href="#" id="transactionsMenuBtn" onclick="showSection('transactions')"><i class="fas fa-exchange-alt"></i> Transacciones</a>
+            <a href="#" onclick="showSection('types')"><i class="fas fa-tags"></i> Tipos de Mov.</a>
+            <a href="#" onclick="showSection('charts')"><i class="fas fa-chart-line"></i> Gráficos</a>
+            <a href="#" onclick="showSection('settings')"><i class="fas fa-cog"></i> Configuración</a>
         </nav>
     </div>
     <div class="menu-overlay" id="menuOverlay" onclick="closeSidebar()"></div>
@@ -135,8 +135,31 @@
     </div>
     
     <div id="modalUser" class="modal">
-        </div>
+        <div class="modal-content">
+            <h3 id="userModalTitle">Crear Nuevo Usuario</h3>
+            
+            <input type="text" id="userNameInput" placeholder="Nombre de Usuario" required>
+            
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
+                <img id="userModalImgPreview" src="https://via.placeholder.com/60" alt="Foto de Perfil" class="profile-img" style="border: 2px solid #ccc; margin-bottom: 0;">
+                <video id="userCameraFeed" style="width: 100%; max-height: 200px; display: none; border-radius: 8px;" autoplay></video>
+                <canvas id="userCanvas" style="display: none;"></canvas>
+            </div>
 
+            <div style="display:flex; gap:10px; flex-wrap: wrap;">
+                <button id="openCameraBtn" class="btn-add" style="flex: 1;"><i class="fas fa-camera"></i> Abrir Cámara</button>
+                <button id="capturePhotoBtn" class="btn-add" style="flex: 1; display: none;"><i class="fas fa-video"></i> Capturar</button>
+                
+                <input type="file" id="userPhotoFileInput" accept="image/*" style="display: none;">
+                <button id="uploadFileBtn" class="btn-add" style="flex: 1;"><i class="fas fa-upload"></i> Subir Foto</button>
+            </div>
+
+            <div style="display:flex; gap:10px;">
+                <button id="saveUserBtn">Guardar Usuario</button>
+                <button class="modal-cancel" onclick="closeModal('modalUser')">Cancelar</button>
+            </div>
+        </div>
+    </div>
     
     <script src="js/app.js"></script>
     <script src="js/charts.js"></script>

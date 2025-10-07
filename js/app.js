@@ -95,52 +95,32 @@ const userNameSpan = document.querySelector(".user-name");
 const userPhoneSpan = document.querySelector(".user-phone"); 
 const profileImg = document.querySelector(".profile-img");
 
-// Modal Usuario (Asegúrate de que este modal está en tu index.html o se inyecta con la lógica anterior)
-const modalUser = document.getElementById('modalUser') || document.createElement('div');
-if (!document.getElementById('modalUser')) {
-    modalUser.id = 'modalUser';
-    modalUser.className = 'modal';
-    modalUser.innerHTML = `
-        <div class="modal-content">
-            <h3>Crear/Editar Usuario</h3>
-            
-            <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
-                <img id="userModalImgPreview" src="https://via.placeholder.com/60" alt="Previsualización" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;">
-                
-                <input type="file" id="userPhotoFile" accept="image/*" style="display: none;">
-                
-                <button id="openCameraBtn" style="background-color: #f39c12;">📷 Tomar Foto / Elegir Archivo</button>
-                <button id="capturePhotoBtn" style="display:none; background-color: #2ecc71;">Capturar Foto</button>
-                
-                <video id="userVideoFeed" style="width: 100%; max-height: 200px; background: #000; display: none;" autoplay></video>
-                <canvas id="userPhotoCanvas" style="display: none;"></canvas>
-                
-            </div>
-            
-            <input type="text" id="userNameInputUser" placeholder="Nombre(s)" required>
-            <input type="text" id="userLastNameInput" placeholder="Apellido(s)" required>
-            
-            <div style="display:flex; gap:10px;">
-                <button id="saveUserBtn">Guardar</button>
-                <button class="modal-cancel" onclick="closeModal('modalUser'); stopCamera()">Cancelar</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modalUser);
-}
-
+// Selectores del Modal Usuario (Alineados con la estructura HTML que se proporcionó)
 const userModalImgPreview = document.getElementById('userModalImgPreview');
-const userPhotoFile = document.getElementById('userPhotoFile');
+
+// 🚩 CORREGIDO: Usar el ID del input file del HTML
+const userPhotoFile = document.getElementById('userPhotoFileInput'); 
+
 const openCameraBtn = document.getElementById('openCameraBtn');
+const uploadFileBtn = document.getElementById('uploadFileBtn'); // Selector del nuevo botón de subir archivo
 const capturePhotoBtn = document.getElementById('capturePhotoBtn');
-const userVideoFeed = document.getElementById('userVideoFeed');
-const userPhotoCanvas = document.getElementById('userPhotoCanvas');
-const userNameInputUser = document.getElementById('userNameInputUser'); // Cambio de ID para no confundir con accountNameInput
-const userLastNameInput = document.getElementById('userLastNameInput');
+
+// 🚩 CORREGIDO: Usar el ID de video y canvas del HTML
+const userVideoFeed = document.getElementById('userCameraFeed'); 
+const userPhotoCanvas = document.getElementById('userCanvas'); 
+
+const userNameInputUser = document.getElementById('userNameInput'); 
+const userLastNameInput = document.getElementById('userLastNameInput'); // Asegúrate que este ID existe en tu HTML
 const saveUserBtn = document.getElementById('saveUserBtn');
 
 saveUserBtn.onclick = saveUserOrEdit;
-openCameraBtn.onclick = toggleCameraOrFile;
+
+// 🚩 LÓGICA DE CÁMARA SEPARADA
+openCameraBtn.onclick = toggleCamera; 
+
+// 🚩 NUEVA LÓGICA DE SUBIDA DE ARCHIVO
+uploadFileBtn.onclick = () => userPhotoFile.click(); 
+
 capturePhotoBtn.onclick = capturePhoto;
 userPhotoFile.onchange = handleFilePhoto;
 
@@ -154,7 +134,8 @@ function initializeUserManagement() {
 
         if (users.length === 0) {
             // No hay usuarios, forzar la creación
-            openEditUserModal(null); 
+            // setTimeout para asegurar que el DOM ha terminado de renderizar al cargar la página.
+            setTimeout(() => openEditUserModal(null), 10); 
         } else {
             // Hay usuarios, cargar el primero por defecto
             currentUserId = users[0].id;
@@ -165,7 +146,7 @@ function initializeUserManagement() {
 }
 
 function updateSidebarProfile(user) {
-    userNameSpan.textContent = `${user.name} ${user.lastName}`;
+    userNameSpan.textContent = `${user.name} ${user.lastName || ''}`;
     profileImg.src = user.photoData || 'https://via.placeholder.com/60';
     
     // Limpiar el contenedor de acciones
@@ -192,36 +173,46 @@ function updateSidebarProfile(user) {
 
 function openEditUserModal(userId = null) {
     editingUserId = userId;
-    userNameInputUser.value = '';
-    userLastNameInput.value = '';
+    
+    // Asumiendo que el campo de nombre en tu HTML tiene el ID 'userNameInput' (como lo definiste en el modal)
+    document.getElementById('userNameInput').value = ''; 
+    
+    // Si tu HTML tiene un campo para el apellido, úsalo aquí
+    if(userLastNameInput) userLastNameInput.value = '';
+
     userModalImgPreview.src = 'https://via.placeholder.com/60';
     stopCamera();
 
     if (userId !== null) {
         db.transaction("users", "readonly").objectStore("users").get(userId).onsuccess = (e) => {
             const user = e.target.result;
-            userNameInputUser.value = user.name;
-            userLastNameInput.value = user.lastName;
+            document.getElementById('userNameInput').value = user.name;
+            if(userLastNameInput) userLastNameInput.value = user.lastName || '';
             userModalImgPreview.src = user.photoData || 'https://via.placeholder.com/60';
         };
     }
     openModal('modalUser');
 }
 
-async function toggleCameraOrFile() {
+// 🚩 NUEVA FUNCIÓN PARA GESTIONAR SOLO LA CÁMARA
+async function toggleCamera() {
     if (cameraActive) {
         stopCamera();
     } else {
         try {
-            videoStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+            // Solicitar cámara frontal si es posible (user-facing)
+            videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
             userVideoFeed.srcObject = videoStream;
             userVideoFeed.style.display = 'block';
             capturePhotoBtn.style.display = 'block';
-            openCameraBtn.textContent = '❌ Cerrar Cámara / Elegir Archivo';
+            openCameraBtn.textContent = '❌ Cerrar Cámara';
+            uploadFileBtn.style.display = 'none'; // Ocultar subir archivo
             cameraActive = true;
         } catch (err) {
-            console.error("No se pudo iniciar la cámara. Abriendo selector de archivos.", err);
-            userPhotoFile.click();
+            console.error("No se pudo iniciar la cámara:", err);
+            // Si la cámara falla, informamos y permitimos la subida de archivo (que ya está visible)
+            alert("No se pudo acceder a la cámara. Por favor, usa la opción 'Subir Foto'.");
+            stopCamera(); 
         }
     }
 }
@@ -229,12 +220,15 @@ async function toggleCameraOrFile() {
 function stopCamera() {
     if (videoStream) {
         videoStream.getTracks().forEach(track => track.stop());
-        userVideoFeed.srcObject = null;
-        userVideoFeed.style.display = 'none';
-        capturePhotoBtn.style.display = 'none';
-        openCameraBtn.textContent = '📷 Tomar Foto / Elegir Archivo';
-        cameraActive = false;
+        videoStream = null;
     }
+    
+    userVideoFeed.srcObject = null;
+    userVideoFeed.style.display = 'none';
+    capturePhotoBtn.style.display = 'none';
+    openCameraBtn.textContent = '📷 Abrir Cámara';
+    uploadFileBtn.style.display = 'block'; // Mostrar subir archivo
+    cameraActive = false;
 }
 
 function capturePhoto() {
@@ -264,10 +258,17 @@ function handleFilePhoto(e) {
 }
 
 function saveUserOrEdit() {
-    const name = userNameInputUser.value;
-    const lastName = userLastNameInput.value;
+    // Usar el ID correcto del input de nombre de usuario en el modal
+    const name = document.getElementById('userNameInput').value; 
+    
+    // Obtener apellido si el input existe
+    const lastName = userLastNameInput ? userLastNameInput.value : ''; 
     const photoData = userModalImgPreview.src;
-    if (!name || !lastName) return;
+    
+    if (!name) {
+        alert("El nombre de usuario es obligatorio.");
+        return;
+    }
 
     const tx = db.transaction("users", "readwrite").objectStore("users");
 
@@ -393,7 +394,7 @@ document.addEventListener('DOMContentLoaded', () => {
     menuToggle.addEventListener("click", openSidebar);
     menuOverlay.addEventListener("click", closeSidebar); 
     
-    showSection('accounts');
+    // Ya no se llama showSection('accounts') aquí, se llama después de initializeUserManagement
 });
 
 
@@ -528,7 +529,8 @@ function loadAccounts() {
                 if(chartFrom) chartFrom.value = "";
                 if(chartTo) chartTo.value = "";
                 showSection('charts');
-                loadChart();
+                // Se asume que loadChart existe en charts.js o en el mismo app.js
+                if (typeof loadChart === 'function') loadChart();
             };
             actionsDiv.append(editBtn, delBtn, viewBtn, chartBtn);
 
@@ -816,8 +818,11 @@ function populateTransactionAccounts(accounts) {
         accountFilterSelect.appendChild(opt);
     });
     // Si hay cuentas, selecciona la primera por defecto para que loadTransactions funcione
-    if (currentAccounts.length > 0) {
+    if (currentAccounts.length > 0 && !selectedAccountId) {
         selectedAccountId = currentAccounts[0].id;
+        accountFilterSelect.value = selectedAccountId;
+    } else if (currentAccounts.length > 0 && selectedAccountId) {
+        // Si ya hay una cuenta seleccionada, intenta mantenerla.
         accountFilterSelect.value = selectedAccountId;
     }
 }
@@ -869,7 +874,7 @@ function loadUserListSettings() {
             li.innerHTML = `
                 <div style="display:flex; align-items:center; gap:10px;">
                     <img src="${user.photoData || 'https://via.placeholder.com/60'}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
-                    <span>${user.name} ${user.lastName} ${isCurrent ? ' <span style="font-weight: bold; color: var(--color-primary);">(ACTUAL)</span>' : ''}</span>
+                    <span>${user.name} ${user.lastName || ''} ${isCurrent ? ' <span style="font-weight: bold; color: var(--color-primary);">(ACTUAL)</span>' : ''}</span>
                 </div>
                 <div style="display:flex; gap: 5px;">
                     <button onclick="openEditUserModal(${user.id})">✏️</button>
