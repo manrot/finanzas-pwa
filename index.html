@@ -6,6 +6,7 @@
     <title>Finanzas Personales</title>
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     </head>
 <body>
@@ -15,8 +16,8 @@
             <div class="profile-info">
                 <img src="https://via.placeholder.com/60" alt="Perfil" class="profile-img">
                 <div class="user-details">
-                    <span class="user-name">Usuario Demo</span>
-                    <span class="user-phone">+1 (555) 123-4567</span>
+                    <span class="user-name">Cargando...</span>
+                    <span class="user-phone"></span> 
                 </div>
             </div>
             <button class="mode-toggle">☀️</button>
@@ -78,17 +79,15 @@
                         <select id="chartAccountSelect" onchange="loadChart()"></select>
                     </label>
 
-    <label>Desde: <input type="date" id="chartFrom" onchange="loadChart()"></label>
-    <label>Hasta: <input type="date" id="chartTo" onchange="loadChart()"></label>
+                    <label>Desde: <input type="date" id="chartFrom" onchange="loadChart()"></label>
+                    <label>Hasta: <input type="date" id="chartTo" onchange="loadChart()"></label>
                 </div>
                 <canvas id="balanceChart"></canvas>
-                  <canvas id="chartCanvas"></canvas>
-            </section>
+                </section>
 
             <section id="settingsSection" class="section" style="display:none;">
                 <h2>Configuración</h2>
-                <p>Opciones de configuración de la aplicación.</p>
-            </section>
+                </section>
         </main>
     </div>
 
@@ -134,6 +133,10 @@
             </div>
         </div>
     </div>
+    
+    <div id="modalUser" class="modal">
+        </div>
+
     
     <script src="js/app.js"></script>
     <script src="js/charts.js"></script>

@@ -123,7 +123,30 @@ main {
     flex-direction: column;
 }
 .user-name { font-weight: bold; font-size: 1.1rem; }
-.user-phone { font-size: 0.85rem; opacity: 0.8; }
+.user-phone { font-size: 0.85rem; opacity: 0.9; } /* Cambio de color de opacidad para mejor contraste */
+
+/* 🚩 ESTILOS AÑADIDOS PARA BOTONES DE ACCIÓN DE USUARIO EN EL SIDEBAR */
+.user-action-btn-primary, .user-action-btn-secondary {
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    border: none;
+    color: white;
+}
+.user-action-btn-primary {
+    background-color: #f39c12; /* Naranja/Amarillo */
+}
+.user-action-btn-secondary {
+    background-color: var(--color-secondary); /* Verde */
+}
+.user-action-btn-primary:hover { background-color: #e67e22; }
+.user-action-btn-secondary:hover { background-color: #27ae60; }
+/* FIN DE ESTILOS AÑADIDOS PARA BOTONES DE ACCIÓN DE USUARIO */
+
+
 .mode-toggle { 
     background: none; 
     border: none; 
@@ -358,6 +381,51 @@ ul li {
 .balance.income { color: var(--color-secondary); font-weight: 700; }
 .balance.expense { color: var(--color-danger); font-weight: 700; }
 
+/* 🚩 ESTILOS AÑADIDOS PARA MODAL DE USUARIO (Cámara y Foto) */
+#openCameraBtn, #capturePhotoBtn {
+    width: 100%;
+    padding: 0.7rem;
+    border: none;
+    font-weight: 600;
+}
+#userModalImgPreview {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+/* FIN DE ESTILOS AÑADIDOS PARA MODAL DE USUARIO */
+
+
+/* ----------------------------------------------------------- */
+/* 🚩 LÓGICA DE GESTIÓN DE USUARIOS (SETTINGS) */
+/* ----------------------------------------------------------- */
+
+/* Estilo para el contenedor de la lista de usuarios en Configuración */
+#userListSettings {
+    margin-top: 1rem;
+}
+
+/* Estilo para los botones de acción en la lista de usuarios */
+#userListSettings li button {
+    background: #f0f0f0;
+    color: var(--color-text-dark);
+    border: 1px solid #ddd;
+    padding: 0.4rem 0.6rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: background-color 0.2s;
+}
+#userListSettings li button:hover {
+    background: #ddd;
+}
+/* Estilo específico para el botón de cambio de usuario */
+#userListSettings li button[onclick*="switchUser"] {
+    background-color: var(--color-primary);
+    color: white;
+}
+#userListSettings li button[onclick*="switchUser"]:hover {
+    background-color: #0066a2;
+}
 
 /* ----------------------------------------------------------- */
 /* 🚩 COMPORTAMIENTO PARA ESCRITORIO (min-width: 992px) */
@@ -457,6 +525,11 @@ ul li {
         margin-top:0.5rem; 
         width: 100%;
         justify-content: flex-end; 
+    }
+
+    /* Ajuste para la lista de usuarios en móvil */
+    #userListSettings li {
+        flex-direction: row;
     }
 }
 

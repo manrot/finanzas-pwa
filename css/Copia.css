@@ -10,12 +10,20 @@
     --shadow-light: 0 2px 5px rgba(0,0,0,0.08);
     --shadow-deep: 0 0 15px rgba(0, 0, 0, 0.2);
     --border-radius: 8px;
+    --sidebar-width: 280px; /* Definimos el ancho del menú en una variable */
 }
 
 * { box-sizing: border-box; margin:0; padding:0; font-family:'Helvetica Neue', Arial, sans-serif; }
 body { background:var(--color-background-light); color:var(--color-text-dark); line-height:1.4; }
 
-/* --- HEADER Y NAVEGACIÓN PRINCIPAL (Fijo Arriba) --- */
+/* 🚩 CONTENEDOR PRINCIPAL: Permitir desplazamiento en móvil */
+.content-wrapper {
+    transition: transform 0.3s ease-in-out, margin-left 0.3s ease-in-out;
+    min-height: 100vh; /* Asegura que el fondo cubra toda la pantalla */
+}
+
+
+/* --- HEADER Y NAVEGACIÓN PRINCIPAL (MÓVIL POR DEFECTO) --- */
 .main-header {
     background: var(--color-primary);
     color: white;
@@ -31,6 +39,8 @@ body { background:var(--color-background-light); color:var(--color-text-dark); l
     font-size: 1.2rem;
     font-weight: 500;
     margin-left: 1rem;
+    flex-grow: 1; 
+    text-align: left; 
 }
 .menu-toggle { 
     font-size: 1.5rem; 
@@ -48,12 +58,12 @@ main {
 }
 
 
-/* --- MENÚ LATERAL DESLIZABLE (Sidebar) --- */
+/* --- MENÚ LATERAL DESLIZABLE (Sidebar - MÓVIL) --- */
 .sidebar-menu {
     position: fixed;
     top: 0;
     left: 0;
-    width: 280px; 
+    width: var(--sidebar-width); 
     height: 100%;
     background: var(--color-sidebar-bg);
     box-shadow: var(--shadow-deep);
@@ -67,7 +77,7 @@ main {
     transform: translateX(0);
 }
 
-/* --- Overlay --- */
+/* --- Overlay (MÓVIL) --- */
 .menu-overlay {
     position: fixed;
     top: 0;
@@ -85,6 +95,7 @@ main {
     opacity: 1;
     visibility: visible;
 }
+
 
 /* --- Estilos de la cabecera del menú (Perfil) --- */
 .sidebar-header {
@@ -178,7 +189,6 @@ ul li {
 }
 
 /* 🚩 Estructura de tarjetas de Cuentas */
-/* Contenedor de la información principal de la cuenta (Nombre, Descripción) */
 .account-main-info { 
     display: flex; 
     flex-direction: column; 
@@ -349,7 +359,64 @@ ul li {
 .balance.expense { color: var(--color-danger); font-weight: 700; }
 
 
-/* --- RESPONSIVE --- */
+/* ----------------------------------------------------------- */
+/* 🚩 COMPORTAMIENTO PARA ESCRITORIO (min-width: 992px) */
+/* ----------------------------------------------------------- */
+@media(min-width:992px){
+    
+    /* 1. MANTENER EL MENÚ SIEMPRE VISIBLE */
+    .sidebar-menu {
+        transform: translateX(0); /* Menú siempre visible */
+        position: fixed; 
+        z-index: 90; 
+        box-shadow: none; 
+        border-right: 1px solid #ddd;
+    }
+    
+    /* 2. OCULTAR EL BOTÓN HAMBURGUESA Y EL OVERLAY */
+    .menu-toggle {
+        display: none;
+    }
+    .menu-overlay {
+        display: none;
+        visibility: hidden;
+    }
+
+    /* 3. CORRER TODO EL CONTENIDO A LA DERECHA */
+    .content-wrapper {
+        margin-left: var(--sidebar-width); /* Correr todo el contenido */
+        width: calc(100% - var(--sidebar-width)); /* Ajustar el ancho del contenido */
+        transform: none; 
+    }
+
+    /* 4. CENTRAR EL TÍTULO "FINANZAS" */
+    .main-header {
+        /* Usamos flexbox para centrar el título que es el único elemento visible además del espacio oculto del toggle */
+        justify-content: center; 
+    }
+    .header-title {
+        text-align: center; /* Centrar el texto */
+        margin-left: 0; /* Remover el margen para un centrado perfecto */
+    }
+    /* Asegurar que el título no sea afectado por el flex-grow en desktop */
+    .header-title {
+        flex-grow: 0;
+    }
+}
+
+
+/* --- RESPONSIVE GENERAL (Ajustes para Tablet/Móvil) --- */
+@media(max-width:991px){
+    /* Comportamiento móvil por debajo de 992px */
+    .main-header {
+        justify-content: flex-start;
+    }
+    .header-title {
+        text-align: left;
+        flex-grow: 1; 
+    }
+}
+
 @media(max-width:768px){
     
     .filters { 
@@ -378,7 +445,7 @@ ul li {
         margin: 0;
     }
     .account-actions {
-        order: 3; /* Mueve las acciones al final */
+        order: 3; 
     }
     
     /* Transacciones y Tipos */
