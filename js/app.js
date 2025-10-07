@@ -95,30 +95,31 @@ const userNameSpan = document.querySelector(".user-name");
 const userPhoneSpan = document.querySelector(".user-phone"); 
 const profileImg = document.querySelector(".profile-img");
 
-// Selectores del Modal Usuario (Alineados con la estructura HTML que se proporcionó)
+// Selectores del Modal Usuario 
 const userModalImgPreview = document.getElementById('userModalImgPreview');
 
-// 🚩 CORREGIDO: Usar el ID del input file del HTML
+// CORREGIDO: Usar el ID del input file del HTML
 const userPhotoFile = document.getElementById('userPhotoFileInput'); 
 
 const openCameraBtn = document.getElementById('openCameraBtn');
-const uploadFileBtn = document.getElementById('uploadFileBtn'); // Selector del nuevo botón de subir archivo
+const uploadFileBtn = document.getElementById('uploadFileBtn'); 
 const capturePhotoBtn = document.getElementById('capturePhotoBtn');
 
-// 🚩 CORREGIDO: Usar el ID de video y canvas del HTML
+// CORREGIDO: Usar el ID de video y canvas del HTML
 const userVideoFeed = document.getElementById('userCameraFeed'); 
 const userPhotoCanvas = document.getElementById('userCanvas'); 
 
+// Asume que los inputs de nombre están bien. Se usan en saveUserOrEdit.
 const userNameInputUser = document.getElementById('userNameInput'); 
-const userLastNameInput = document.getElementById('userLastNameInput'); // Asegúrate que este ID existe en tu HTML
+const userLastNameInput = document.getElementById('userLastNameInput'); 
 const saveUserBtn = document.getElementById('saveUserBtn');
 
 saveUserBtn.onclick = saveUserOrEdit;
 
-// 🚩 LÓGICA DE CÁMARA SEPARADA
+// LÓGICA DE CÁMARA SEPARADA
 openCameraBtn.onclick = toggleCamera; 
 
-// 🚩 NUEVA LÓGICA DE SUBIDA DE ARCHIVO
+// NUEVA LÓGICA DE SUBIDA DE ARCHIVO
 uploadFileBtn.onclick = () => userPhotoFile.click(); 
 
 capturePhotoBtn.onclick = capturePhoto;
@@ -194,7 +195,7 @@ function openEditUserModal(userId = null) {
     openModal('modalUser');
 }
 
-// 🚩 NUEVA FUNCIÓN PARA GESTIONAR SOLO LA CÁMARA
+// NUEVA FUNCIÓN PARA GESTIONAR SOLO LA CÁMARA
 async function toggleCamera() {
     if (cameraActive) {
         stopCamera();
@@ -389,32 +390,32 @@ function showSection(id) {
     // El 'charts' se mantiene, asumiendo que ya tienes loadChart()
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Asegurar los listeners del menú si no estaban asignados en el HTML
-    menuToggle.addEventListener("click", openSidebar);
-    menuOverlay.addEventListener("click", closeSidebar); 
-    
-    // Ya no se llama showSection('accounts') aquí, se llama después de initializeUserManagement
-});
+// 🚩 CORRECCIÓN CRÍTICA: RECONEXIÓN DE EVENTOS DEL MENÚ LATERAL 🚩
 
-
-// 🚩 LÓGICA DE MENÚ LATERAL (SIDEBAR) 🚩
 const menuToggle = document.getElementById("menuToggle");
 const sidebarMenu = document.getElementById("sidebarMenu");
 const menuOverlay = document.getElementById("menuOverlay");
 const contentWrapper = document.getElementById("contentWrapper");
 
 function openSidebar() {
-    if (window.innerWidth < 992) {
-        sidebarMenu.classList.add("open");
-        menuOverlay.classList.add("open");
-    }
+    // La condición de ancho se quita para permitir que CSS maneje el responsive
+    sidebarMenu.classList.add("open");
+    menuOverlay.classList.add("open");
 }
 
 function closeSidebar() {
     sidebarMenu.classList.remove("open");
     menuOverlay.classList.remove("open");
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    // 🚩 Estos listeners son la solución para el menú lateral no funcional
+    if(menuToggle) menuToggle.addEventListener("click", openSidebar);
+    if(menuOverlay) menuOverlay.addEventListener("click", closeSidebar); 
+    
+    // Ya no se llama showSection('accounts') aquí, se llama después de initializeUserManagement
+});
+
 
 // 🚩 LÓGICA DE MODALES (Añade transición) 🚩
 function openModal(id) { 
@@ -457,7 +458,7 @@ function saveAccountOrEdit() {
             };
         };
     } else {
-        // 🚩 AÑADIR EL ID DEL USUARIO
+        // AÑADIR EL ID DEL USUARIO
         tx.add({ name, description: desc, balance: 0, userId: currentUserId }).onsuccess = () => {
             closeModal("modalAccount");
             loadAccounts();
@@ -472,7 +473,7 @@ function loadAccounts() {
         return;
     }
     
-    // 🚩 FILTRAR POR USER ID
+    // FILTRAR POR USER ID
     const tx = db.transaction("accounts", "readonly").objectStore("accounts").index("userId");
     tx.getAll(currentUserId).onsuccess = (e) => {
         accountList.innerHTML = "";
@@ -603,7 +604,7 @@ function saveNewTransaction() {
         const tx = db.transaction("transactions", "readwrite").objectStore("transactions");
         tx.add({
             accountId: selectedAccountId,
-            userId: currentUserId, // 🚩 AÑADIR EL ID DEL USUARIO
+            userId: currentUserId, // AÑADIR EL ID DEL USUARIO
             type: typeName,
             amount,
             sign: signo,
@@ -627,7 +628,7 @@ function loadTransactions() {
 
     const tx = db.transaction("transactions", "readonly").objectStore("transactions").index("accountId");
     tx.getAll(Number(accountId)).onsuccess = (e) => {
-        // 🚩 Filtrar por userId, aunque si las cuentas son únicas por usuario, esto es redundante, es buena práctica:
+        // Filtrar por userId, aunque si las cuentas son únicas por usuario, esto es redundante, es buena práctica:
         let data = e.target.result.filter(t => t.userId === currentUserId);
         
         if (fromDate) data = data.filter(t => t.date.split("T")[0] >= fromDate);
