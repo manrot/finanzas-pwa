@@ -17,7 +17,7 @@ function loadChart() {
     const counts = {};
     data.forEach(t => counts[t.type] = (counts[t.type] || 0) + t.amount);
 
-    const ctx = document.getElementById('chartCanvas').getContext('2d');
+    const ctx = document.getElementById('balanceChart').getContext('2d');
     if(chartInstance) chartInstance.destroy();
     chartInstance = new Chart(ctx, {
       type: 'pie',
