@@ -541,7 +541,7 @@ function loadAccounts() {
 
             const saldoAmount = document.createElement("span");
             saldoAmount.className = "saldo-amount";
-            saldoAmount.textContent = "$ " + (acc.balance || 0).toFixed(2);
+            saldoAmount.textContent = "₡ " + (acc.balance || 0).toFixed(2);
             
             const balance = acc.balance || 0;
             if (balance >= 0) {
