@@ -461,7 +461,7 @@ function showSection(id) {
         loadUserListSettings();
     }
      else if (id === "dataBD") {
-        loadUserListSettings();
+        loadDataBDSection();
     }
     // El 'charts' se mantiene, asumiendo que ya tienes loadChart()
 }
