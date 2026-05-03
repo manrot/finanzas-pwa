@@ -125,6 +125,79 @@ uploadFileBtn.onclick = () => userPhotoFile.click();
 capturePhotoBtn.onclick = capturePhoto;
 userPhotoFile.onchange = handleFilePhoto;
 
+    //-------------------------------------------------------------------
+    //  LÓGICA DE IMPORT Y EXPORT DATA
+    //-------------------------------------------------------------------
+async function exportDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open("FinanzasDB", 2);
+
+    request.onsuccess = async (event) => {
+      const db = event.target.result;
+      const data = {};
+
+      const storeNames = Array.from(db.objectStoreNames);
+
+      for (let storeName of storeNames) {
+        data[storeName] = await getAllData(db, storeName);
+      }
+
+      const json = JSON.stringify(data);
+
+      // Descargar archivo
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "finanzas_backup.json";
+      a.click();
+
+      resolve();
+    };
+
+    request.onerror = reject;
+  });
+}
+
+function getAllData(db, storeName) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, "readonly");
+    const store = tx.objectStore(storeName);
+
+    const req = store.getAll();
+
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = reject;
+  });
+}
+
+async function importDB(file) {
+  const text = await file.text();
+  const data = JSON.parse(text);
+
+  const request = indexedDB.open("FinanzasDB", 2);
+
+  request.onsuccess = (event) => {
+    const db = event.target.result;
+
+    const tx = db.transaction(Object.keys(data), "readwrite");
+
+    for (let storeName in data) {
+      const store = tx.objectStore(storeName);
+
+      data[storeName].forEach(item => {
+        store.put(item); // put evita duplicados (update si existe)
+      });
+    }
+
+    tx.oncomplete = () => {
+      console.log("Importación completa 🚀");
+    };
+  };
+}
+
+
 // ----------------------------------------------------------------------
 // 🚩 LÓGICA DE USUARIO Y MULTI-TENANT 🚩
 // ----------------------------------------------------------------------
@@ -385,6 +458,9 @@ function showSection(id) {
     } else if (id === "transactions") {
         loadTransactions();
     } else if (id === "settings") {
+        loadUserListSettings();
+    }
+     else if (id === "dataBD") {
         loadUserListSettings();
     }
     // El 'charts' se mantiene, asumiendo que ya tienes loadChart()
@@ -886,4 +962,58 @@ function loadUserListSettings() {
             listElement.appendChild(li);
         });
     };
+}
+
+function loadDataBDSection() {
+    let container = document.getElementById('dataBDContainer');
+
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'dataBDContainer';
+
+        container.innerHTML = `
+            <h3>Fuente de datos</h3>
+            <div id="dbList" class="type-list"></div>
+            <input type="file" id="importFileInput" style="display:none" />
+        `;
+
+        document.getElementById('dataBD').appendChild(container);
+
+        document.getElementById('importFileInput').onchange = (e) => {
+            const file = e.target.files[0];
+            if (file) importDB(file);
+        };
+    }
+
+    const listElement = document.getElementById('dbList');
+    listElement.innerHTML = '';
+
+    checkIfDBHasData().then(hasData => {
+        const li = document.createElement('li');
+
+        li.style.display = 'flex';
+        li.style.justifyContent = 'space-between';
+        li.style.alignItems = 'center';
+
+        li.innerHTML = `
+            <div style="display:flex; align-items:center; gap:10px;">
+                <i class="fas fa-database" style="font-size: 30px;"></i>
+                <div>
+                    <strong>FinanzasDB</strong><br>
+                    <small>${hasData ? 'Datos disponibles' : 'Base de datos vacía'}</small>
+                </div>
+            </div>
+
+            <div style="display:flex; gap: 5px;">
+                <button onclick="exportDB()" ${!hasData ? 'disabled' : ''}>
+                    📤 Exportar
+                </button>
+                <button onclick="document.getElementById('importFileInput').click()">
+                    📥 Importar
+                </button>
+            </div>
+        `;
+
+        listElement.appendChild(li);
+    });
 }
