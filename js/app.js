@@ -1017,3 +1017,28 @@ function loadDataBDSection() {
         listElement.appendChild(li);
     });
 }
+
+function checkIfDBHasData() {
+    return new Promise((resolve) => {
+        const tx = db.transaction(db.objectStoreNames, "readonly");
+
+        let hasData = false;
+        let storesChecked = 0;
+        const totalStores = db.objectStoreNames.length;
+
+        Array.from(db.objectStoreNames).forEach(storeName => {
+            const countRequest = tx.objectStore(storeName).count();
+
+            countRequest.onsuccess = () => {
+                if (countRequest.result > 0) {
+                    hasData = true;
+                }
+
+                storesChecked++;
+                if (storesChecked === totalStores) {
+                    resolve(hasData);
+                }
+            };
+        });
+    });
+}
