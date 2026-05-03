@@ -977,7 +977,7 @@ function loadDataBDSection() {
             <input type="file" id="importFileInput" style="display:none" />
         `;
 
-        document.getElementById('dataBD').appendChild(container);
+        document.getElementById('dataBDSection').appendChild(container);
 
         document.getElementById('importFileInput').onchange = (e) => {
             const file = e.target.files[0];
